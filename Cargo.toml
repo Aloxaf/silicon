@@ -1,0 +1,22 @@
+[package]
+name = "silicon"
+version = "0.1.0"
+description = "Create beautiful image of your code"
+authors = ["Aloxaf <aloxafx@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+syntect = "3.2"
+image = "0.21"
+imageproc = "0.18"
+rusttype = "0.7.7"
+font-kit = "0.3.1"
+failure = "0.1.5"
+regex = "1.1.7"
+clipboard = "0.5.0"
+structopt = { version = "0.2.18", features = [ "color", "wrap_help" ] }
+
+[build-dependencies]
+cc = "1.0.37"
