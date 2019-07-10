@@ -11,3 +11,4 @@ A [Carbon](https://github.com/dawnlabs/carbon) alternative implemented in Rust.
 - [ ] Clipboard support
   - [x] Get code from clipboard
   - [ ] Paste the image to clipboard
+- [ ] Watermark

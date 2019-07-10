@@ -1,24 +1,20 @@
 #[macro_use]
 extern crate failure;
 
-use std::path::Path;
-
+use crate::config::Config;
+use crate::utils::{add_window_controls, round_corner};
+use failure::Error;
+use structopt::StructOpt;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
-
-use failure::Error;
-use structopt::StructOpt;
 
 mod blur;
 mod config;
 mod font;
 mod formatter;
 mod utils;
-
-use crate::config::Config;
-use crate::utils::{add_window_controls, round_corner};
 
 fn run() -> Result<(), Error> {
     let config: Config = Config::from_args();
@@ -47,16 +43,17 @@ fn run() -> Result<(), Error> {
 
     let image = config.get_shadow_adder().apply_to(&image);
 
-    image.save(Path::new("test.png")).unwrap();
+    if let Some(path) = config.output() {
+        image
+            .save(path)
+            .map_err(|e| format_err!("Failed to save image to {}: {}", path.display(), e))?;
+    }
 
     Ok(())
 }
 
 fn main() {
-    match run() {
-        Err(e) => {
-            eprintln!("{}", e);
-        }
-        _ => (),
+    if let Err(e) = run() {
+        eprintln!("[error] {}", e);
     }
 }

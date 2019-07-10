@@ -49,7 +49,6 @@ pub struct Config {
     // Build theme cache.
     // #[structopt(long)]
     // build_cache: bool,
-
     /// Read input from clipboard.
     #[structopt(long)]
     from_clipboard: bool,
@@ -57,7 +56,6 @@ pub struct Config {
     // Copy the output image to clipboard.
     // #[structopt(short = "c", long)]
     // to_clipboard: bool,
-
     /// Write output image to specific location instead of cwd.
     #[structopt(short = "o", long, value_name = "path")]
     output: Option<PathBuf>,
@@ -115,7 +113,6 @@ pub struct Config {
     // Draw a custom text on the bottom right corner
     // #[structopt(long)]
     // watermark: Option<String>,
-
     /// File to read. If not set, stdin will be use.
     #[structopt(value_name = "FILE", parse(from_os_str))]
     file: Option<PathBuf>,
@@ -127,13 +124,18 @@ impl Config {
         ps: &'a SyntaxSet,
     ) -> Result<(&'a SyntaxReference, String), Error> {
         if self.from_clipboard {
-            let mut ctx = ClipboardContext::new().expect("failed to access clipboard.");
-            let code = ctx.get_contents().expect("failed to access clipboard");
+            let mut ctx = ClipboardContext::new()
+                .map_err(|e| format_err!("failed to access clipboard: {}", e))?;
+            let code = ctx
+                .get_contents()
+                .map_err(|e| format_err!("failed to access clipboard: {}", e))?;
 
             let language = if let Some(language) = &self.language {
-                ps.find_syntax_by_token(language).expect("not found")
+                ps.find_syntax_by_token(language)
+                    .ok_or(format_err!("There is no such a language: {}", language))?
             } else {
-                ps.find_syntax_by_first_line(&code).expect("not found")
+                ps.find_syntax_by_first_line(&code)
+                    .ok_or(format_err!("Failed to detect the language"))?
                 // TODO: else ?
             };
             return Ok((language, code));
@@ -145,9 +147,11 @@ impl Config {
             file.read_to_string(&mut s)?;
 
             let language = if let Some(language) = &self.language {
-                ps.find_syntax_by_token(language).expect("not found")
+                ps.find_syntax_by_token(language)
+                    .ok_or(format_err!("There is no such a language: {}", language))?
             } else {
-                ps.find_syntax_for_file(path)?.unwrap()
+                ps.find_syntax_for_file(path)?
+                    .ok_or(format_err!("Failed to detect the language"))?
             };
 
             return Ok((language, s));
@@ -158,9 +162,11 @@ impl Config {
         stdin.read_to_string(&mut s)?;
 
         let language = if let Some(language) = &self.language {
-            ps.find_syntax_by_token(language).expect("not found")
+            ps.find_syntax_by_token(language)
+                .ok_or(format_err!("There is no such a language: {}", language))?
         } else {
-            ps.find_syntax_by_first_line(&s).expect("not found")
+            ps.find_syntax_by_first_line(&s)
+                .ok_or(format_err!("Failed to detect the language"))?
             // TODO: else ?
         };
 
@@ -211,5 +217,9 @@ impl Config {
             .pad_vert(self.pad_vert)
             .offset_x(self.shadow_offset_x)
             .offset_y(self.shadow_offset_y)
+    }
+
+    pub fn output(&self) -> Option<&PathBuf> {
+        self.output.as_ref()
     }
 }
