@@ -4,11 +4,14 @@ extern crate failure;
 use crate::config::Config;
 use crate::utils::{add_window_controls, round_corner};
 use failure::Error;
+use std::io::stdout;
 use structopt::StructOpt;
+use syntect::dumps;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
+use image::ImageFormat;
 
 mod blur;
 mod config;
@@ -19,8 +22,15 @@ mod utils;
 fn run() -> Result<(), Error> {
     let config: Config = Config::from_args();
 
-    let ps = SyntaxSet::load_defaults_newlines();
-    let ts = ThemeSet::load_defaults();
+    let ps = dumps::from_binary::<SyntaxSet>(include_bytes!("../assets/syntaxes.bin")); //SyntaxSet::load_defaults_newlines();
+    let ts = dumps::from_binary::<ThemeSet>(include_bytes!("../assets/themes.bin")); // ThemeSet::load();
+
+    if config.list_themes {
+        for i in ts.themes.keys() {
+            println!("{}", i);
+        }
+        return Ok(());
+    }
 
     let (syntax, code) = config.get_source_code(&ps)?;
 
@@ -43,10 +53,14 @@ fn run() -> Result<(), Error> {
 
     let image = config.get_shadow_adder().apply_to(&image);
 
-    let path = config.output();
-    image
-        .save(path)
-        .map_err(|e| format_err!("Failed to save image to {}: {}", path.display(), e))?;
+    if let Some(path) = &config.output {
+        image
+            .save(path)
+            .map_err(|e| format_err!("Failed to save image to {}: {}", path.display(), e))?;
+    } else {
+        let mut stdout = stdout();
+        image.write_to(&mut stdout, ImageFormat::PNG)?;
+    }
 
     Ok(())
 }

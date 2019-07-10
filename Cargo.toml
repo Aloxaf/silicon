@@ -19,6 +19,7 @@ structopt = { version = "0.2.18", default-features = false, features = [ "color"
 itertools = "0.8.0"
 
 [build-dependencies]
+syntect = "3.2"
 cc = "1.0.37"
 
 [profile.release]

@@ -42,9 +42,9 @@ pub struct Config {
     #[structopt(long, default_value = "2")]
     line_pad: u32,
 
-    // List all themes.
-    // #[structopt(long)]
-    // list_themes: bool,
+    /// List all themes.
+    #[structopt(long)]
+    pub list_themes: bool,
 
     // Build theme cache.
     // #[structopt(long)]
@@ -58,7 +58,7 @@ pub struct Config {
     // to_clipboard: bool,
     /// Write output image to specific location instead of cwd.
     #[structopt(short = "o", long, value_name = "path")]
-    output: PathBuf,
+    pub output: Option<PathBuf>,
 
     /// Hide the window controls.
     #[structopt(long)]
@@ -132,7 +132,7 @@ impl Config {
 
             let language = if let Some(language) = &self.language {
                 ps.find_syntax_by_token(language)
-                    .ok_or(format_err!("There is no such a language: {}", language))?
+                    .ok_or(format_err!("Unsupported language: {}", language))?
             } else {
                 ps.find_syntax_by_first_line(&code)
                     .ok_or(format_err!("Failed to detect the language"))?
@@ -148,7 +148,7 @@ impl Config {
 
             let language = if let Some(language) = &self.language {
                 ps.find_syntax_by_token(language)
-                    .ok_or(format_err!("There is no such a language: {}", language))?
+                    .ok_or(format_err!("Unsupported language: {}", language))?
             } else {
                 ps.find_syntax_for_file(path)?
                     .ok_or(format_err!("Failed to detect the language"))?
@@ -163,7 +163,7 @@ impl Config {
 
         let language = if let Some(language) = &self.language {
             ps.find_syntax_by_token(language)
-                .ok_or(format_err!("There is no such a language: {}", language))?
+                .ok_or(format_err!("Unsupported language: {}", language))?
         } else {
             ps.find_syntax_by_first_line(&s)
                 .ok_or(format_err!("Failed to detect the language"))?
@@ -217,9 +217,5 @@ impl Config {
             .pad_vert(self.pad_vert)
             .offset_x(self.shadow_offset_x)
             .offset_y(self.shadow_offset_y)
-    }
-
-    pub fn output(&self) -> &PathBuf {
-        &self.output
     }
 }

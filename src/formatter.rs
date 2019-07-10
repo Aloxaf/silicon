@@ -3,9 +3,9 @@ use crate::utils::ToRgba;
 use failure::Error;
 use image::{DynamicImage, Rgba, RgbaImage};
 use imageproc::drawing::draw_text_mut;
+use itertools::Itertools;
 use rusttype::Font;
 use syntect::highlighting::{Color, Style, Theme};
-use itertools::Itertools;
 
 pub struct ImageFormatter<'a> {
     /// pad between lines
@@ -206,7 +206,7 @@ impl<'a> ImageFormatter<'a> {
                         continue;
                     }
 
-                    if text.as_bytes()[0].is_ascii() ||self.cjk_font.is_none()  {
+                    if text.as_bytes()[0].is_ascii() || self.cjk_font.is_none() {
                         // let text = text.trim_end_matches('\n');
                         let font = self.font.get_by_style(style);
 
