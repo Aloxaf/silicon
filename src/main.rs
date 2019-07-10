@@ -43,11 +43,10 @@ fn run() -> Result<(), Error> {
 
     let image = config.get_shadow_adder().apply_to(&image);
 
-    if let Some(path) = config.output() {
-        image
-            .save(path)
-            .map_err(|e| format_err!("Failed to save image to {}: {}", path.display(), e))?;
-    }
+    let path = config.output();
+    image
+        .save(path)
+        .map_err(|e| format_err!("Failed to save image to {}: {}", path.display(), e))?;
 
     Ok(())
 }

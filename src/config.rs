@@ -58,7 +58,7 @@ pub struct Config {
     // to_clipboard: bool,
     /// Write output image to specific location instead of cwd.
     #[structopt(short = "o", long, value_name = "path")]
-    output: Option<PathBuf>,
+    output: PathBuf,
 
     /// Hide the window controls.
     #[structopt(long)]
@@ -219,7 +219,7 @@ impl Config {
             .offset_y(self.shadow_offset_y)
     }
 
-    pub fn output(&self) -> Option<&PathBuf> {
-        self.output.as_ref()
+    pub fn output(&self) -> &PathBuf {
+        &self.output
     }
 }

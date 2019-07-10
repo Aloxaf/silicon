@@ -14,9 +14,12 @@ imageproc = "0.18"
 rusttype = "0.7.7"
 font-kit = "0.3.1"
 failure = "0.1.5"
-regex = "1.1.7"
 clipboard = "0.5.0"
-structopt = { version = "0.2.18", features = [ "color", "wrap_help" ] }
+structopt = { version = "0.2.18", default-features = false, features = [ "color", "wrap_help" ] }
+itertools = "0.8.0"
 
 [build-dependencies]
 cc = "1.0.37"
+
+[profile.release]
+lto = true

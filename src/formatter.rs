@@ -3,9 +3,9 @@ use crate::utils::ToRgba;
 use failure::Error;
 use image::{DynamicImage, Rgba, RgbaImage};
 use imageproc::drawing::draw_text_mut;
-use regex::Regex;
 use rusttype::Font;
 use syntect::highlighting::{Color, Style, Theme};
+use itertools::Itertools;
 
 pub struct ImageFormatter<'a> {
     /// pad between lines
@@ -142,7 +142,7 @@ struct Drawable<'a> {
     max_width: u32,
     /// max number of line of the picture
     max_lineno: u32,
-    drawables: Vec<(u32, u32, Color, &'a Font<'a>, &'a str)>,
+    drawables: Vec<(u32, u32, Color, &'a Font<'a>, String)>,
 }
 
 impl<'a> ImageFormatter<'a> {
@@ -186,9 +186,6 @@ impl<'a> ImageFormatter<'a> {
     where
         'a: 'b,
     {
-        // split the ASCII character and non-ASCII character
-        let re = Regex::new("([\x00-\x7f]+)|([^\x00-\x7f]+)").unwrap();
-
         let mut drawables = vec![];
         let (mut max_width, mut max_lineno) = (0, 0);
 
@@ -198,30 +195,30 @@ impl<'a> ImageFormatter<'a> {
 
             for (style, text) in tokens {
                 // render ASCII character and non-ASCII character with different font
-                for cap in re.captures_iter(text) {
+                for (_k, group) in &text.chars().group_by(|c| c.is_ascii()) {
                     // '\n' can't be draw to image
-                    let text = cap.get(0).unwrap().as_str().trim_end_matches('\n');
+                    let text = group.collect::<String>();
+                    let text: &str = text.trim_end_matches('\n');
+
                     let width = self.get_char_x(charno, cjk_charno);
 
                     if text.is_empty() {
                         continue;
                     }
 
-                    if text.as_bytes()[0].is_ascii() {
+                    if text.as_bytes()[0].is_ascii() ||self.cjk_font.is_none()  {
                         // let text = text.trim_end_matches('\n');
                         let font = self.font.get_by_style(style);
 
-                        drawables.push((width, height, style.foreground, font, text));
+                        drawables.push((width, height, style.foreground, font, text.to_owned()));
                         // TODO: UNDERLINE & combine of these
 
                         charno += text.len() as u32;
                     } else if let Some(cjk_font) = &self.cjk_font {
                         let font = cjk_font.get_by_style(style);
 
-                        drawables.push((width, height, style.foreground, font, text));
+                        drawables.push((width, height, style.foreground, font, text.to_owned()));
                         cjk_charno += text.chars().count() as u32;
-                    } else {
-                        panic!("No CJK fonts!");
                     }
                 }
                 max_width = max_width.max(self.get_char_x(charno, cjk_charno));
@@ -278,7 +275,7 @@ impl<'a> ImageFormatter<'a> {
 
         for (x, y, color, font, text) in drawables.drawables {
             let color = color.to_rgba();
-            draw_text_mut(&mut image, color, x, y, self.font.get_scale(), &font, text);
+            draw_text_mut(&mut image, color, x, y, self.font.get_scale(), &font, &text);
         }
 
         image
