@@ -1,0 +1,54 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/3/syntax.html
+name: CMakeCache
+file_extensions: [CMakeCache.txt]
+first_line_match: "# This is the CMakeCache file."
+scope: source.cmakecache
+
+variables:
+  identifier: '[a-zA-Z0-9\-_:\\/ .]+'
+
+contexts:
+  main:
+    - include: comments
+    - include: key-value-pair
+
+  comments:
+    - match: \/\/
+      scope: punctuation.definition.comment.cmakecache
+      push:
+        - meta_scope: comment.line.double-slash.doc.cmakecache
+        - match: $
+          pop: true
+    - match: \#
+      scope: punctuation.definition.comment.cmakecache
+      push:
+        - meta_scope: comment.line.number-sign.cmakecache
+        - match: $
+          pop: true
+
+  key-value-pair:
+    - match: ^(\w|-)+
+      scope: variable.parameter.cmakecache
+      set: expect-type
+    - match: .
+      scope: invalid.illegal.cmakecache
+
+  expect-type:
+    - match: ':'
+      scope: punctuation.separator.cmakecache
+    - match: '{{identifier}}'
+      scope: storage.type.cmakecache
+      set: expect-value
+    - match: .
+      scope: invalid.illegal.cmakecache
+
+  expect-value:
+    - match: '='
+      scope: keyword.operator.assignment.cmakecache
+    - match: $
+      pop: true
+    - match: .*
+      scope: string.unquoted.cmakecache
+      pop: true

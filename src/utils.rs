@@ -1,8 +1,10 @@
 use image::imageops::{blur, crop};
-use image::Pixel;
+use image::{Pixel, ImageOutputFormat};
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba, RgbaImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut};
 use imageproc::rect::Rect;
+use failure::Error;
+use std::process::Command;
 
 pub trait ToRgba {
     type Target;
@@ -243,4 +245,20 @@ where
             p += 2 * (x - y) + 1;
         }
     }
+}
+
+#[cfg(target_os = "linux")]
+pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
+    let mut temp = tempfile::NamedTempFile::new()?;
+    image.write_to(&mut temp, ImageOutputFormat::PNG)?;
+    Command::new("xclip")
+        .args(&["-sel", "clip", "-t", "image/png", temp.path().to_str().unwrap()])
+        .status()
+        .map_err(|e| format_err!("Failed to copy image to clipboard: {}", e))?;
+    Ok(())
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
+    format_err!("This feature hasn't been implemented in your system")
 }

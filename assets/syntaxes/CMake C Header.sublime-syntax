@@ -1,0 +1,40 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/3/syntax.html
+name: CMake C Header
+file_extensions: [h.in]
+scope: source.cmake.config.c
+variables:
+  identifier: '\b[[:alpha:]_][[:alnum:]_]*\b'
+contexts:
+  main:
+    - match: ""
+      push: "Packages/C++/C.sublime-syntax"
+      with_prototype:
+        - match: \$\{
+          scope: keyword.other.block.start.cmake
+          push:
+            - meta_include_prototype: true
+            - meta_scope: variable.cmake
+            - match: \}
+              scope: keyword.other.block.end.cmake
+              pop: true
+        - match: \@
+          scope: keyword.other.block.start.cmake
+          push:
+            - meta_include_prototype: true
+            - meta_scope: variable.cmake
+            - match: \@
+              scope: keyword.other.block.end.cmake
+              pop: true
+        - match: ^\s*(\#\s*cmakedefine)\b
+          captures:
+            1: meta.preprocessor.macro.c keyword.control.import.cmakedefine.c
+          push:
+            - meta_content_scope: meta.preprocessor.macro.c
+            - include: scope:source.c#preprocessor-line-continuation
+            - include: scope:source.c#preprocessor-line-ending
+            - include: scope:source.c#preprocessor-comments
+            - match: '{{identifier}}'
+              scope: entity.name.variable.cmake
+              pop: true

@@ -1,0 +1,209 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/3/syntax.html
+name: AWK
+
+scope: source.awk
+
+file_extensions:
+  - awk
+
+# References
+# http://pubs.opengroup.org/onlinepubs/009695399/utilities/awk.html
+# http://www.gnu.org/software/gawk/manual/html_node/index.html
+# http://www.grymoire.com/Unix/Awk.html
+# http://www.cs.mun.ca/~yzchen/bib/nawkUS.pdf
+variables:
+
+  NAME: '[A-Za-z_][A-Za-z_0-9]*'
+
+contexts:
+
+  main:
+    - include: comment
+    - include: procedure
+    - include: pattern
+
+  comment:
+    - match: '(?<!\S)(#)(?!\{).*$\n?'
+      scope: comment.line.number-sign.awk
+      captures:
+        1: punctuation.definition.comment.awk
+
+  procedure:
+    - match: '{'
+      scope: meta.brace.curly.awk
+      push:
+        - match: '}'
+          scope: meta.brace.curly.awk
+          pop: true
+        - include: comment
+        - include: procedure
+        - include: keyword
+        - include: expression
+
+  pattern:
+    - include: function-definition
+    - include: builtin-pattern
+    - include: expression
+
+  #TODO: Resolve regex / operator ambiguity
+  #Will probably have to split expression
+  #into seperate unary/binary states
+  #See https://github.com/sublimehq/Packages/blob/master/JavaScript/JavaScript.sublime-syntax
+  expression:
+    - include: comment
+    - include: command
+    - include: function
+    - include: constant
+    - include: variable
+    - include: groupings
+    - include: prefix-operator
+    - include: regexp
+    - match: '(?=[\S])'
+      pop: true
+
+  groupings:
+    - match: \(
+      scope: meta.brace.round.awk
+    - match: \)(?=\s*{)
+      scope: meta.brace.round.awk
+    - match: \)
+      scope: meta.brace.round.awk
+      push: infix-operator
+    - match: \,
+      scope: punctuation.separator.parameters.awk
+
+  builtin-pattern:
+    - match: \b(BEGINFILE|BEGIN|ENDFILE|END)\b
+      scope: constant.language.awk
+
+  function-definition:
+    - match: \b(function)\s+({{NAME}})(\()
+      captures:
+        1: storage.type.function.awk
+        2: entity.name.function.awk
+        3: punctuation.definition.parameters.begin.awk
+      push:
+        - match: \)
+          captures:
+            0: punctuation.definition.parameters.end.awk
+          pop: true
+        - match: \b(\w+)\b
+          scope: variable.parameter.function.awk
+        - match: \b(,)\b
+          scope: punctuation.separator.parameters.awk
+
+  constant:
+    - include: numeric-constant
+    - include: string-constant
+
+  numeric-constant:
+    - match: '\b[0-9]+(?:\.[0-9]+)?(?:e[+-][0-9]+)?\b'
+      scope: constant.numeric.awk
+      push: infix-operator
+
+  string-constant:
+    - match: '"'
+      scope: punctuation.definition.string.begin.awk
+      push:
+        - meta_scope: string.quoted.double.awk
+        - match: '"'
+          scope: punctuation.definition.string.end.awk
+          pop: true
+        - include: escaped-char
+
+  escaped-char:
+    - match: '\\(?:[\\abfnrtv/"]|x[0-9A-Fa-f]{2}|[0-7]{3})'
+      scope: constant.character.escape.awk
+
+  # To avoid ambiguity with division operators regexps are only
+  # valid in places were division is not.
+  regexp:
+    - match: /
+      scope: punctuation.definition.regex.begin.awk
+      push:
+        - meta_content_scope: string.regexp
+        - match: "(/)([gimy]*)"
+          captures:
+            1: punctuation.definition.regex.end.awk
+            2: keyword.other.awk
+          set: infix-operator
+        - match: '(?=.|\n)'
+          with_prototype:
+            - match: '(?=/)'
+              pop: true
+          push:
+            - include: scope:source.regexp
+
+  variable:
+    - match: '\$[0-9]+'
+      scope: variable.language.awk
+      push: infix-operator
+    - match: \b(?:FILENAME|FS|NF|NR|OFMT|OFS|ORS|RS)\b
+      scope: variable.language.awk
+      push: infix-operator
+    - match: \b(?:ARGC|ARGV|CONVFMT|ENVIRON|FNR|RLENGTH|RSTART|SUBSEP)\b
+      scope: variable.language.nawk
+      push: infix-operator
+    - match: \b(?:ARGIND|ERRNO|FIELDWIDTHS|IGNORECASE|RT)\b
+      scope: variable.language.gawk
+      push: infix-operator
+    - match: '\b{{NAME}}\b'
+      scope: variable.other.readwrite.awk
+      push: infix-operator
+
+  keyword:
+    - match: \b(?:break|continue|do|while|exit|for|if|else|return)\b
+      scope: keyword.control.awk
+
+  command:
+    - match: \b(?:next|print|printf)\b
+      scope: keyword.other.command.awk
+    - match: \b(?:close|getline|delete|system)\b
+      scope: keyword.other.command.nawk
+    - match: \b(?:fflush|nextfile)\b
+      scope: keyword.other.command.bell-awk
+
+  function:
+    - match: \b(?:exp|int|log|sqrt|index|length|split|sprintf|substr)\b
+      scope: support.function.awk
+    - match: \b(?:atan2|cos|rand|sin|srand|gsub|match|sub|tolower|toupper)\b
+      scope: support.function.nawk
+    - match: \b(?:gensub|strftime|systime)\b
+      scope: support.function.gawk
+    - match: \b{{NAME}}(?=\s*\()
+      scope: entity.name.function.awk
+
+  prefix-operator:
+    - match: '[+-]'
+      scope: keyword.operator.arithmetic.awk
+      set: expression
+
+  infix-operator:
+    - match: "!?~|[=<>!]=|[<>]"
+      scope: keyword.operator.comparison.awk
+      set: expression
+    - match: \b(in)\b
+      scope: keyword.operator.comparison.awk
+      set: expression
+    - match: '[+\-*/%^]=|\+\+|--|>>|='
+      scope: keyword.operator.assignment.awk
+      set: expression
+    - match: \|\||&&|!
+      scope: keyword.operator.boolean.awk
+      set: expression
+    - match: '[+\-*/%^]'
+      scope: keyword.operator.arithmetic.awk
+      set: expression
+    - match: '[?:]'
+      scope: keyword.operator.trinary.awk
+      set: expression
+    - match: '\['
+      scope: keyword.operator.index.awk
+      set: expression
+    - match: '\]'
+      scope: keyword.operator.index.awk
+      set: expression
+    - match: '(?=[\S])'
+      pop: true

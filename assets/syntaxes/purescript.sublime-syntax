@@ -1,0 +1,387 @@
+%YAML 1.2
+---
+# http://www.sublimetext.com/docs/3/syntax.html
+name: PureScript
+file_extensions:
+  - purs
+scope: source.purescript
+contexts:
+  main:
+    - match: ^\s*\b(module)\b
+      captures:
+        1: keyword.other.purescript
+      push:
+        - meta_scope: meta.section.module.purescript
+        - match: \b(where)\b
+          captures:
+            1: keyword.other.purescript
+          pop: true
+        - include: module-name
+    - match: \b(import)\b
+      captures:
+        1: keyword.other.purescript
+      push:
+        - meta_scope: keyword.control.import.purescript
+        - match: '([A-Za-z0-9.]*)\s*'
+          captures:
+            1: support.other.module.purescript
+        - match: \(
+          push:
+            - match: ',?\s*([A-Z][\w'']*)\s*(?:\(([A-Z][\w\s,'']*|..)\))?'
+              captures:
+                1: entity.name.type.purescript
+                2: entity.name.function.constructor.purescript
+            - match: ',?\s?class\s+([A-Z][\w'']*)'
+              captures:
+                1: entity.name.typeclass.purescript
+            - match: ',?\s?([\w'']*)'
+              captures:
+                1: entity.name.function
+            - match: \)
+              pop: true
+        - match: '(as)\s+([A-Z][\w'']*)'
+          captures:
+            1: keyword.control.import.as
+            2: support.other.module.purescript
+        - match: '(hiding)\s+\((?:,?\s?([A-Z][\w'']*))+\)'
+          meta_scope: meta.section.module.purescript
+          captures:
+            1: keyword.control.import.hiding.purescript
+        - match: $
+          pop: true
+        - include: module-name
+    - match: ^\s*\b(class)\b
+      captures:
+        1: keyword.other.purescript
+      push:
+        - meta_scope: meta.declaration.typeclass.purescript
+        - match: \b(where)\b|$
+          captures:
+            1: keyword.other.purescript
+          pop: true
+        - match: '([A-Z][\w.'']*)'
+          scope: entity.other.inherited-class.purescript
+        - include: generic-tyvar
+    - match: ^\s*\b(instance)\b
+      captures:
+        1: keyword.other.purescript
+      push:
+        - meta_scope: meta.declaration.instance.purescript
+        - match: \b(where)\b|$
+          captures:
+            1: keyword.other.purescript
+          pop: true
+        - include: type-signature
+    - match: '^\s*([a-z_][\w\d\'']*|\(.+\))\s*(::)'
+      captures:
+        1: entity.name.function.purescript
+        2: keyword.operator.has-type.purescript
+      push:
+        - meta_scope: meta.declaration.function.purescript
+        - match: $
+          pop: true
+        - include: type-signature
+    - match: \s*(foreign)\s+(import)\s+(data)\s+(.+?)\s+(::)
+      scope: meta.declaration.ffi.data.purescript
+      captures:
+        1: keyword.other.purescript
+        2: keyword.other.purescript
+        3: keyword.other.purescript
+        4: entity.name.function.ffi.purescript
+    - match: \s*(foreign)\s+(import)\s+(.+?)\s+
+      captures:
+        1: keyword.other.purescript
+        2: keyword.other.purescript
+        3: entity.name.function.ffi.purescript
+      push:
+        - meta_scope: meta.declaration.ffi.function.purescript
+        - match: \s*(::)(.+?)
+          captures:
+            1: keyword.operator.has-type.purescript
+          pop: true
+        - include: ffi
+    - include: comments
+    - include: reserveds
+    - include: constants
+    - include: numbers
+    - include: strings
+    - include: operator
+    - include: monoid
+    - include: prelude
+    - include: array
+    - include: eff
+    - include: either
+    - include: enum
+    - include: error
+    - include: global
+    - include: ioref
+    - include: maybe
+    - include: monad
+    - include: random
+    - include: regex
+    - include: st
+    - include: string
+    - include: trace
+    - include: tuple
+    - include: data
+  array:
+    - include: array-op
+    - include: array-constant
+  array-op:
+    - match: (:)
+      scope: keyword.operator.array.purescript
+  array-constant:
+    - match: \[\]
+      scope: constant.other.purescript
+  comments:
+    - match: \-\-.*
+      scope: comment.line.purescript
+    - match: '\{\-'
+      push:
+        - meta_scope: comment.block.purescript
+        - match: '\-\}'
+          pop: true
+  constants:
+    - match: \b(true|false)\b
+      scope: constant.language.purescript
+  data:
+    - match: '\b([A-Z]\w*)\b'
+      scope: constant.other.purescript
+  decl-ctor:
+    - match: '\s*([A-Z][\w\.]*?)\s+([A-Z][\w\.]*)\s*'
+      captures:
+        1: storage.type.purescript
+        2: constant.other.purescript
+  eff:
+    - include: eff-data
+  eff-data:
+    - match: \b(Effect)\b
+      scope: support.function.data.eff.purescript
+  either:
+    - include: either-data
+    - include: either-function
+  either-data:
+    - match: \b(Left|Right)\b
+      scope: support.function.data.either.purescript
+  either-function:
+    - match: \b(either)\b
+      scope: support.function.either.purescript
+  enum:
+    - include: enum-function
+    - include: enum-typeclass
+  enum-function:
+    - match: \b(fromEnum|toEnum)\b
+      scope: support.function.enum.purescript
+  enum-typeclass:
+    - match: \b(Enum)\b
+      scope: storage.type.enum.purescript
+  error:
+    - include: error-function
+  error-function:
+    - match: \b(catchError|throwError)\b
+      scope: support.function.error.purescript
+  ffi:
+    - match: '"'
+      push:
+        - match: '"'
+          pop: true
+        - include: scope:source.js
+  generic-tyvar:
+    - match: '\b([a-z][\w'']*)\b'
+      scope: variable.other.purescript
+  global:
+    - include: global-constant
+    - include: global-function
+  global-constant:
+    - match: \b(infinity|nan)\b
+      scope: constant.support.global.purescript
+  global-function:
+    - match: \b(decodeURI|decodeURIComponent|encodeURI|encodeURIComponent|isFinite|isNaN|parseFloat|parseInt|toExponential|toFixed|toPrecision)\b
+      scope: support.function.global.purescript
+  ioref:
+    - include: ioref-data
+    - include: ioref-function
+  ioref-data:
+    - match: \b(IORef|Ref)\b
+      scope: support.function.data.ioref.purescript
+  ioref-function:
+    - match: \b(modifyIORef|newIORef|readIORef|unsafeRunIORef|writeIORef)\b
+      scope: support.function.ioref.purescript
+  maybe:
+    - include: maybe-data
+    - include: maybe-function
+  maybe-data:
+    - match: \b(Just|Nothing)\b
+      scope: support.function.data.maybe.purescript
+  maybe-function:
+    - match: \b(maybe|fromMaybe)\b
+      scope: support.function.maybe.purescript
+  module-name:
+    - match: '([A-Za-z][\w\.'']*)'
+      scope: support.other.module.purescript
+  monad:
+    - include: monad-function
+  monad-function:
+    - match: \b(replicateM|mapM|sequence|join|foldM|when)\b
+      scope: support.function.monad.purescript
+  monoid:
+    - include: monoid-function
+    - include: monoid-typeclass
+  monoid-function:
+    - match: \b(mconcat|mempty)\b
+      scope: support.function.monoid.purescript
+  monoid-typeclass:
+    - match: \b(Monoid)\b
+      scope: storage.type.monoid.purescript
+  numbers:
+    - match: \b([0-9]+|0([xX][0-9a-fA-F]+|[oO][0-7]+))\b
+      scope: constant.numeric.purescript
+    - match: \b([0-9]+\.[0-9]+([eE][+-]?[0-9]+)?|[0-9]+[eE][+-]?[0-9]+)\b
+      scope: constant.numeric.float.purescript
+  operator:
+    - match: '[|!%$#?~+:\-.=</>\\]+'
+      comment: In case this regex seems overly general, note that Purescript permits the definition of new operators which can be nearly any string of punctuation characters, such as $%^&*.
+      scope: keyword.operator.purescript
+  prelude:
+    - include: prelude-data
+    - include: prelude-function
+  prelude-data:
+    - match: \b(Ref)\b
+      scope: support.function.data.prelude.purescript
+  prelude-function:
+    - match: \b(const|flip)\b
+      scope: support.function.prelude.purescript
+    - include: prelude-function-alternative
+    - include: prelude-function-applicative
+    - include: prelude-function-bits
+    - include: prelude-function-boollike
+    - include: prelude-function-category
+    - include: prelude-function-monad
+    - include: prelude-function-num
+    - include: prelude-function-ord
+    - include: prelude-function-read
+    - include: prelude-function-ref
+    - include: prelude-function-show
+  prelude-function-alternative:
+    - match: \b(empty)\b
+      scope: support.function.prelude.alternative.purescript
+  prelude-function-applicative:
+    - match: \b(pure)\b
+      scope: support.function.prelude.applicative.purescript
+  prelude-function-bits:
+    - match: \b(complement|shl|shr|numAnd|numComplement|numOr|numShl|numShr|numXor|numZshr|zshr)\b
+      scope: support.function.prelude.bits.purescript
+  prelude-function-boollike:
+    - match: \b(boolAnd|boolNot|boolOr|not)\b
+      scope: support.function.prelude.boollike.purescript
+  prelude-function-category:
+    - match: \b(identity)\b
+      scope: support.function.prelude.category.purescript
+  prelude-function-monad:
+    - match: \b(return)\b
+      scope: support.function.prelude.monad.purescript
+  prelude-function-num:
+    - match: \b(negate|numAdd|numDiv|numMod|numMul|numNegate|numSub)\b
+      scope: support.function.prelude.num.purescript
+  prelude-function-ord:
+    - match: \b(numLess|numLessEq|numGreater|numGreaterEq)\b
+      scope: support.function.prelude.ord.purescript
+  prelude-function-read:
+    - match: \b(read|readNumber)\b
+      scope: support.function.prelude.read.purescript
+  prelude-function-ref:
+    - match: \b(liftRef|refEq|refIneq|unsafeRefEq|unsafeRefIneq)\b
+      scope: support.function.prelude.ref.purescript
+  prelude-function-show:
+    - match: \b(show|showNumber)\b
+      scope: support.function.prelude.show.purescript
+  random:
+    - include: random-data
+    - include: random-function
+  random-data:
+    - match: \b(Random)\b
+      scope: support.function.data.random.purescript
+  random-function:
+    - match: \b(random)\b
+      scope: support.function.random.purescript
+  regex:
+    - include: regex-data
+    - include: regex-function
+  regex-data:
+    - match: \b(Regex)\b
+      scope: support.function.data.regex.purescript
+  regex-function:
+    - match: \b(match|regex|replaceR|search|test)\b
+      scope: support.function.regex.purescript
+  reserveds:
+    - include: reserveds-control
+    - include: reserveds-other
+  reserveds-control:
+    - match: \b(case|do|else|if|in|let|of|then)\b
+      scope: keyword.control.purescript
+  reserveds-other:
+    - match: \b(as|class|data|forall|foreign|import|infix|infixl|infixr|instance|module|newtype|qualified|type|where)\b
+      scope: keyword.other.purescript
+  st:
+    - include: st-data
+    - include: st-function
+  st-data:
+    - match: \b(ST|STRef|STArray)\b
+      scope: support.function.data.st.purescript
+  st-function:
+    - match: \b(modifySTRef|newSTArray|newSTRef|peekSTArray|pokeSTArray|readSTRef|runST|runSTArray|writeSTRef)\b
+      scope: support.function.st.purescript
+  string:
+    - include: string-function
+  string-function:
+    - match: \b(charAt|indexOfS|lastIndexOfS|lengthS|localeCompare|replace|sliceS|split|substr|substring|toLower|toUpper|trim)\b
+      scope: support.function.string.purescript
+  strings:
+    - match: (\")
+      captures:
+        0: punctuation.definition.string.begin.purescript
+      push:
+        - meta_scope: string.quoted.double.purescript
+        - match: (\")
+          captures:
+            0: punctuation.definition.string.end.purescript
+          pop: true
+        - include: strings-escapes
+  strings-escapes:
+    - match: '\\(''|\"|\\|/|b|f|n|r|t|v|0|u[0-9a-fA-F]{4})'
+      scope: constant.character.escape
+  trace:
+    - include: trace-data
+    - include: trace-function
+  trace-data:
+    - match: \b(Trace)\b
+      scope: support.function.data.trace.purescript
+  trace-function:
+    - match: \b(print|trace)\b
+      scope: support.function.trace.purescript
+  tuple:
+    - include: tuple-function
+  tuple-function:
+    - match: \b(curry|uncurry|unzip|zip)\b
+      scope: support.function.tuple.purescript
+  type-constraint:
+    - match: '\s*(?:([A-Z][\w.'']*)(?:\s+([a-z_][\w.'']*))+ | \(([A-Z][\w.'']*)(?:\s+([a-z_][\w.'']*))+\))\s*(=>)'
+      scope: meta.constraint.purescript
+      captures:
+        1: entity.other.inherited-class.purescript
+        2: variable.other.purescript
+        3: entity.other.inherited-class.purescript
+        4: variable.other.purescript
+        5: keyword.operator.purescript
+  type-signature:
+    - include: type-simple
+    - include: type-constraint
+  type-simple:
+    - match: \((->)\)|(->)
+      scope: arrow.operator.purescript
+      captures:
+        1: keyword.operator.purescript
+        2: keyword.operator.purescript
+    - match: '([A-Z][\w.'']*)'
+      scope: storage.type.purescript
+    - include: generic-tyvar

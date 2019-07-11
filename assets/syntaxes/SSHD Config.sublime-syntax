@@ -1,0 +1,184 @@
+%YAML 1.2
+---
+# https://www.sublimetext.com/docs/3/syntax.html
+# http://man7.org/linux/man-pages/man5/sshd_config.5.html
+name: SSHD Config
+file_extensions:
+  - sshd_config
+scope: text.sshd_config
+contexts:
+  main:
+    - include: comments
+    - include: match
+    - include: generic-option
+
+  options:
+    - include: comments
+    - include: forcecommand
+    - include: generic-option
+
+  tokens:
+    # http://man7.org/linux/man-pages/man5/sshd_config.5.html#TOKENS
+    - match: '%[%DFfhiKksTtUu]'
+      scope: constant.character.escape.sshd_config
+
+  pop-nl:
+    - match: '\n'
+      pop: true
+
+  pop-before-nl:
+    - match: '(?=\n)'
+      pop: true
+
+  pop-before-match-option:
+    - include: pop-before-nl
+    - match: (?i)(?=[ \t]*(all|user|group|host|(?:local)?address|localport)\b)
+      pop: true
+
+  pop-before-next-match:
+    - match: (?i)(?=^[ \t]*(match)\b)
+      pop: true
+
+  # Match
+  match:
+    - match: '(?i)^[ \t]*(match)\b'
+      captures:
+        1: meta.block.match.sshd_config keyword.control.conditional.sshd_config
+      set: match-conditions
+
+  match-conditions:
+    - meta_scope: meta.block.match.sshd_config meta.statement.conditional.sshd_config
+    - match: (?=\n)
+      set: match-body
+
+    - match: '!'
+      scope: keyword.operator.logical.sshd_config
+    - match: (?i)\b(all)\b
+      scope: constant.language.boolean.sshd_config
+
+    - match: (?i)\b(user|group|host)\b
+      scope: keyword.other.sshd_config
+      push:
+        - include: pop-before-match-option
+        - include: string-patterns
+
+    - match: (?i)\b((?:local)?address)\b
+      scope: keyword.other.sshd_config
+      push:
+        - match: '!'
+          scope: keyword.operator.logical.sshd_config
+        - match: ','
+          scope: punctuation.separator.sequence.sshd_config
+        - match: '\*|\?'
+          scope: constant.language.wildcard.sshd_config
+        - include: ip-addresses
+        - include: pop-before-match-option
+
+    - match: (?i)\b(localport)\b
+      scope: keyword.other.sshd_config
+      push:
+        - match: \d+
+          scope: constant.numeric.integer.decimal.sshd_config
+        - include: pop-before-match-option
+
+  match-body:
+    - meta_scope: meta.block.match.sshd_config
+    - include: pop-before-next-match
+    - include: options
+
+  string-patterns:
+    # http://man7.org/linux/man-pages/man5/sshd_config.5.html#PATTERNS
+    - match: '[^\s*?!,]+'
+      scope: string.unquoted.sshd_config
+    - match: '!'
+      scope: string.unquoted.sshd_config keyword.operator.logical.sshd_config
+    - match: ','
+      scope: string.unquoted.sshd_config punctuation.separator.sequence.sshd_config
+    - match: '\*|\?'
+      scope: string.unquoted.sshd_config constant.language.wildcard.sshd_config
+
+  ip-addresses:
+    - match: |-
+        (?x:
+          (
+            ((?:\d{1,3}\.){3}\d{1,3})(?:(/)(\d{1,3}))?|  # simple IPv4 with CIDR
+            ((?i:[a-f0-9:]+:+)+[a-f0-9]+)                # simple IPv6
+          )
+        )
+      captures:
+        1: meta.string.host.sshd_config
+        2: constant.numeric.ip4.sshd_config
+        3: punctuation.separator.sequence.sshd_config
+        4: constant.other.range.sshd_config
+        5: constant.numeric.ip6.sshd_config
+
+  forcecommand:
+    - match: '^\s*(?i)(forcecommand)\b[ \t]*(=)?'
+      captures:
+        1: meta.mapping.key.sshd_config keyword.other.sshd_config
+        2: keyword.operator.assignment.sshd_config
+      push:
+        - meta_content_scope: meta.mapping.value.sshd_config source.embedded.shell
+        - match: none
+          scope: constant.language.set.sshd_config
+          pop: true
+        - include: scope:source.shell
+        - include: pop-nl
+
+  generic-option:
+    - match: '^\s*([a-zA-Z1]+)\b[ \t]*(=)?'
+      captures:
+        1: meta.mapping.key.sshd_config keyword.other.sshd_config
+        2: keyword.operator.assignment.sshd_config
+      push:
+        - meta_content_scope: meta.mapping.value.sshd_config
+        - include: tokens
+        - match: \"
+          scope: punctuation.definition.string.begin.sshd_config
+          push:
+            - meta_scope: string.quoted.double.sshd_config
+            - match: \"
+              scope: punctuation.definition.string.end.sshd_config
+              pop: true
+            - match: \n|$
+              scope: invalid.illegal.sshd_config
+              pop: true
+            - include: generic-option-value
+        - match: '(?=\S)'
+          push:
+            - meta_content_scope: string.unquoted.sshd_config
+            - include: pop-before-nl
+            - include: generic-option-value
+        - include: pop-nl
+
+  generic-option-value:
+    - match: '(?i)\b(yes|no)\b'
+      scope: constant.language.boolean.sshd_config
+    - match: '(?i)\b(any|none)\b'
+      scope: constant.language.set.sshd_config
+    - match: '(?i)\bdefault\b'
+      scope: constant.language.default.sshd_config
+    - include: ip-addresses
+    - include: tokens
+    - match: \*|\?
+      scope: constant.language.wildcard.sshd_config
+    - match: '\d+'
+      scope: constant.numeric.sshd_config
+    - match: '!'
+      scope: keyword.operator.logical.sshd_config
+    - match: ','
+      scope: punctuation.separator.sequence.sshd_config
+
+  comments:
+    - match: '^\s*(#)'
+      captures:
+        1: punctuation.definition.comment.sshd_config
+      push:
+        - meta_scope: comment.line.number-sign.sshd_config
+        - include: pop-nl
+    - match: '^\s*(;)'
+      captures:
+        1: punctuation.definition.comment.sshd_config
+      push:
+        - meta_scope: comment.line.semi-colon.sshd_config
+        - include: pop-nl

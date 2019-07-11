@@ -1,0 +1,94 @@
+%YAML 1.2
+---
+name: varlink
+file_extensions:
+  - varlink
+scope: source.varlink
+
+variables:
+  interface_name: '([a-z](\-*[a-z0-9])*(\.[a-z0-9](\-*[a-z0-9])*)+)'
+  identifier: '([A-Z][a-zA-Z0-9_]*)'
+  field_name: '[A-Za-z]([_]?[A-Za-z0-9])*'
+
+contexts:
+  main:
+    - include: statements
+
+  statements:
+    - include: comments
+
+    - match: '(interface)\s+(\b{{interface_name}}\b)'
+      scope: meta.type.declaration.varlink
+      captures:
+        1: storage.type.interface.varlink
+        2: entity.name.interface.varlink
+
+    - match: '(method)\s+(\b{{identifier}}\b)\s*(?=[(])'
+      scope: meta.method.declaration.varlink
+      captures:
+        1: storage.type.method.varlink
+        2: entity.name.method.varlink
+      push: [ method-return, block ]
+
+    - match: '(type)\s+(\b{{identifier}}\b)\s*(?=[(])'
+      scope: meta.type.declaration.varlink
+      captures:
+        1: storage.type.type.varlink
+        2: entity.name.type.varlink
+      push: block
+
+    - match: '(error)\s+(\b{{identifier}}\b)\s*(?=[(])'
+      scope: meta.error.declaration.varlink
+      captures:
+        1: storage.type.error.varlink
+        2: entity.name.error.varlink
+      push: block
+
+  method-return:
+    - match: '(->)\s*(?=[(])'
+      scope: keyword.operator.varlink
+      set: block
+
+  block:
+    - include: comments
+    - match: '\)'
+      scope: punctuation.section.group.end.varlink
+      pop: true
+    - match: '\('
+      scope: punctuation.section.group.begin.varlink
+      push: block-inner
+
+  block-inner:
+    - include: comments
+    - match: '(?=\))'
+      pop: true
+    - match: '\b{{field_name}}\b'
+      scope: variable.parameter.varlink
+    - match: ','
+      scope: punctuation.separator.varlink
+    - match: ":"
+      scope: punctuation.separator.varlink
+      push: type
+
+  type:
+    - include: comments
+    - match: '(?=\()'
+      push: block
+    - match: '(?=\))'
+      pop: true
+    - match: '(?=,)'
+      pop: true
+    - match: '\b(string|bool|int|float|object)\b'
+      scope: storage.type.varlink
+    - match: '(\[\]|\[string\]|\?)'
+      scope: storage.modifier.varlink
+    - match: '\b{{identifier}}\b'
+      scope: entity.name.type.varlink
+
+  comments:
+    - match: "#"
+      scope: punctuation.definition.comment.varlink
+      push:
+        - meta_scope: comment.line.documentation.varlink
+        - match: $\n?
+          pop: true

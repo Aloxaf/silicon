@@ -2,7 +2,7 @@
 extern crate failure;
 
 use crate::config::Config;
-use crate::utils::{add_window_controls, round_corner};
+use crate::utils::{add_window_controls, round_corner, dump_image_to_clipboard};
 use failure::Error;
 use std::io::stdout;
 use structopt::StructOpt;
@@ -53,13 +53,17 @@ fn run() -> Result<(), Error> {
 
     let image = config.get_shadow_adder().apply_to(&image);
 
-    if let Some(path) = &config.output {
-        image
-            .save(path)
-            .map_err(|e| format_err!("Failed to save image to {}: {}", path.display(), e))?;
+    if config.to_clipboard {
+        dump_image_to_clipboard(&image)?;
     } else {
-        let mut stdout = stdout();
-        image.write_to(&mut stdout, ImageFormat::PNG)?;
+        if let Some(path) = &config.output {
+            image
+                .save(path)
+                .map_err(|e| format_err!("Failed to save image to {}: {}", path.display(), e))?;
+        } else {
+            let mut stdout = stdout();
+            image.write_to(&mut stdout, ImageFormat::PNG)?;
+        }
     }
 
     Ok(())

@@ -1,0 +1,122 @@
+%YAML 1.2
+---
+name: jsonnet
+file_extensions: [jsonnet, libsonnet, libjsonnet]
+scope: source.jsonnet
+
+contexts:
+  main:
+    - match: \b(\d+([Ee][+-]?\d+)?)\b
+      scope: constant.numeric.jsonnet
+
+    - match: \b\d+[.]\d*([Ee][+-]?\d+)?\b
+      scope: constant.numeric.jsonnet
+
+    - match: \b[.]\d+([Ee][+-]?\d+)?\b
+      scope: constant.numeric.jsonnet
+
+    - match: \bstd[.](abs|acos|asciiLower|asciiUpper|asin|assertEqual|atan|base64|base64Decode|base64DecodeBytes)\b
+      scope: support.function.jsonnet
+
+    - match: \bstd[.](ceil|char|codepoint|cos|count|endsWith)\b
+      scope: support.function.jsonnet
+
+    - match: \bstd[.](escapeStringBash|escapeStringDollars|escapeStringJson|escapeStringPython)\b
+      scope: support.function.jsonnet
+
+    - match: \bstd[.](exp|exponent|extVar|filter|filterMap|flattenArrays|floor|foldl|foldr|format)\b
+      scope: support.function.jsonnet
+
+    - match: \bstd[.](isArray|isBoolean|isFunction|isNumber|isObject|isString|join|length|lines|log|makeArray)\b
+      scope: support.function.jsonnet
+
+    - match: \bstd[.](manifestIni|manifestJsonEx|manifestPython|manifestPythonVars|manifestXmlJsonml|manifestYamlDoc|manifestYamlStream)\b
+      scope: support.function.jsonnet
+
+    - match: \bstd[.](mantissa|map|mapWithIndex|mapWithKey|max|md5|mergePatch|min|mod)\b
+      scope: support.function.jsonnet
+
+    - match: \bstd[.](objectFields|objectFieldsAll|objectHas|objectHasAll|parseInt|pow|prune|range)\b
+      scope: support.function.jsonnet
+
+    - match: \bstd[.](set|setDiff|setInter|setMember|setUnion|sign|sin|sort|split|splitLimit|sqrt)\b
+      scope: support.function.jsonnet
+
+    - match: \bstd[.](startsWith|stringChars|strReplace|substr|tan|toString|type|uniq)\b
+      scope: support.function.jsonnet
+
+    - match: \bstd[.](native|thisFile)\b
+      scope: support.function.jsonnet
+
+    - match: \b[$]\b
+      scope: variable.language.jsonnet
+
+    - match: \b[a-zA-Z_][a-z0-9A-Z_]*\s*(\([^)]*\))?\s*\+?::?:?
+      scope: entity.name.function.jsonnet
+
+    - match: \b(import|importstr)\b
+      scope: storage.type.jsonnet
+
+    - match: \b(function)\b
+      scope: keyword.other.jsonnet
+
+    - match: \b(self|super)\b
+      scope: variable.language.jsonnet
+
+    - match: \b(if|then|else|for|in)\b
+      scope: keyword.control.jsonnet
+
+    - match: \b(local|tailstrict)\b
+      scope: keyword.other.jsonnet
+
+    - match: \b(true|false|null)\b
+      scope: constant.language.jsonnet
+
+    - match: \b(error|assert)\b
+      scope: keyword.control.jsonnet
+
+    - match: //.*$
+      scope: comment.line.jsonnet
+
+    - match: '#.*$'
+      scope: comment.block.jsonnet
+
+    - match: /\*
+      push: comment
+
+    - match: \|\|\|
+      push: unquoted
+
+    - match: '"'
+      push: string
+      
+    - match: "\'"
+      push: single_string
+
+  comment:
+    - meta_scope: comment.block.jsonnet
+    - match: \*/
+      pop: true
+
+  unquoted:
+    - meta_scope: string.unquoted.block.jsonnet
+    - match: \|\|\|
+      pop: true
+
+  string:
+    - meta_scope: string.double.jsonnet
+    - match: '"'
+      pop: true
+    - match: \\(["\\/bfnrt]|(u[0-9a-fA-F]{4}))
+      scope: constant.character.escape.jsonnet
+    - match: \\[^"\\/bfnrtu]
+      scope: invalid.illegal.jsonnet
+
+  single_string:
+    - meta_scope: string.double.jsonnet
+    - match: "\'"
+      pop: true
+    - match: \\(["\\/bfnrt]|(u[0-9a-fA-F]{4}))
+      scope: constant.character.escape.jsonnet
+    - match: \\[^"\\/bfnrtu]
+      scope: invalid.illegal.jsonnet

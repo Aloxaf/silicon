@@ -17,6 +17,7 @@ failure = "0.1.5"
 clipboard = "0.5.0"
 structopt = { version = "0.2.18", default-features = false, features = [ "color", "wrap_help" ] }
 itertools = "0.8.0"
+tempfile = "3.1.0"
 
 [build-dependencies]
 syntect = "3.2"

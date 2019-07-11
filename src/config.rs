@@ -19,54 +19,52 @@ fn parse_str_color(s: &str) -> Result<Rgba<u8>, Error> {
 #[structopt(name = "silicon", rename_all = "kebab")]
 pub struct Config {
     /// The syntax highlight theme. It can be a theme name or path to a .tmTheme file.
-    #[structopt(long, default_value = "base16-eighties.dark")]
-    theme: String,
+    #[structopt(long, default_value = "Monokai Extended")]
+    pub theme: String,
 
     /// The base font.
     #[structopt(long)]
-    font: Option<String>,
+    pub font: Option<String>,
 
     /// Size of the base font.
     #[structopt(long, value_name = "size", default_value = "27.0")]
-    font_size: f32,
+    pub font_size: f32,
 
     /// The CJK font.
     #[structopt(long, value_name = "font")]
-    cjk_font: Option<String>,
+    pub cjk_font: Option<String>,
 
     /// Size of the CJK font.
     #[structopt(long, value_name = "size", default_value = "27.0")]
-    cjk_size: f32,
+    pub cjk_size: f32,
 
     /// Pad between lines
     #[structopt(long, default_value = "2")]
-    line_pad: u32,
+    pub line_pad: u32,
 
     /// List all themes.
     #[structopt(long)]
     pub list_themes: bool,
 
-    // Build theme cache.
-    // #[structopt(long)]
-    // build_cache: bool,
     /// Read input from clipboard.
     #[structopt(long)]
-    from_clipboard: bool,
+    pub from_clipboard: bool,
 
     // Copy the output image to clipboard.
-    // #[structopt(short = "c", long)]
-    // to_clipboard: bool,
+    #[structopt(short = "c", long)]
+    pub to_clipboard: bool,
+
     /// Write output image to specific location instead of cwd.
     #[structopt(short = "o", long, value_name = "path")]
     pub output: Option<PathBuf>,
 
     /// Hide the window controls.
     #[structopt(long)]
-    no_window_controls: bool,
+    pub no_window_controls: bool,
 
     /// Hide the line number.
     #[structopt(long)]
-    no_line_number: bool,
+    pub no_line_number: bool,
 
     /// Background color of the image
     #[structopt(
@@ -75,7 +73,7 @@ pub struct Config {
         default_value = "#abb8c3",
         parse(try_from_str = "parse_str_color")
     )]
-    background: Rgba<u8>,
+    pub background: Rgba<u8>,
 
     /// Color of shadow
     #[structopt(
@@ -84,38 +82,39 @@ pub struct Config {
         default_value = "#555555",
         parse(try_from_str = "parse_str_color")
     )]
-    shadow_color: Rgba<u8>,
+    pub shadow_color: Rgba<u8>,
 
     /// Blur radius of the shadow
     #[structopt(long, value_name = "radius", default_value = "10.0")]
-    shadow_blur_radius: f32,
+    pub shadow_blur_radius: f32,
 
     /// Pad horiz
     #[structopt(long, default_value = "80")]
-    pad_horiz: u32,
+    pub pad_horiz: u32,
 
     /// Pad vert
     #[structopt(long, default_value = "100")]
-    pad_vert: u32,
+    pub pad_vert: u32,
 
     /// Shadow's offset in Y axis
     #[structopt(long, value_name = "offset", default_value = "0")]
-    shadow_offset_y: i32,
+    pub shadow_offset_y: i32,
 
     /// Shadow's offset in X axis
     #[structopt(long, value_name = "offset", default_value = "0")]
-    shadow_offset_x: i32,
+    pub shadow_offset_x: i32,
 
     /// The language for syntax highlighting. You can use full name ("Rust") or file extension ("rs").
     #[structopt(short = "l", long)]
-    language: Option<String>,
+    pub language: Option<String>,
 
     // Draw a custom text on the bottom right corner
     // #[structopt(long)]
     // watermark: Option<String>,
+
     /// File to read. If not set, stdin will be use.
     #[structopt(value_name = "FILE", parse(from_os_str))]
-    file: Option<PathBuf>,
+    pub file: Option<PathBuf>,
 }
 
 impl Config {
