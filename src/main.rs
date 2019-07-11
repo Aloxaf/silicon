@@ -2,8 +2,9 @@
 extern crate failure;
 
 use crate::config::Config;
-use crate::utils::{add_window_controls, round_corner, dump_image_to_clipboard};
+use crate::utils::{add_window_controls, dump_image_to_clipboard, round_corner};
 use failure::Error;
+use image::ImageFormat;
 use std::io::stdout;
 use structopt::StructOpt;
 use syntect::dumps;
@@ -11,7 +12,6 @@ use syntect::easy::HighlightLines;
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
-use image::ImageFormat;
 
 mod blur;
 mod config;
@@ -55,15 +55,13 @@ fn run() -> Result<(), Error> {
 
     if config.to_clipboard {
         dump_image_to_clipboard(&image)?;
+    } else if let Some(path) = &config.output {
+        image
+            .save(path)
+            .map_err(|e| format_err!("Failed to save image to {}: {}", path.display(), e))?;
     } else {
-        if let Some(path) = &config.output {
-            image
-                .save(path)
-                .map_err(|e| format_err!("Failed to save image to {}: {}", path.display(), e))?;
-        } else {
-            let mut stdout = stdout();
-            image.write_to(&mut stdout, ImageFormat::PNG)?;
-        }
+        let mut stdout = stdout();
+        image.write_to(&mut stdout, ImageFormat::PNG)?;
     }
 
     Ok(())

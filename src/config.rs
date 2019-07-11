@@ -111,7 +111,6 @@ pub struct Config {
     // Draw a custom text on the bottom right corner
     // #[structopt(long)]
     // watermark: Option<String>,
-
     /// File to read. If not set, stdin will be use.
     #[structopt(value_name = "FILE", parse(from_os_str))]
     pub file: Option<PathBuf>,
@@ -131,10 +130,10 @@ impl Config {
 
             let language = if let Some(language) = &self.language {
                 ps.find_syntax_by_token(language)
-                    .ok_or(format_err!("Unsupported language: {}", language))?
+                    .ok_or_else(|| format_err!("Unsupported language: {}", language))?
             } else {
                 ps.find_syntax_by_first_line(&code)
-                    .ok_or(format_err!("Failed to detect the language"))?
+                    .ok_or_else(|| format_err!("Failed to detect the language"))?
                 // TODO: else ?
             };
             return Ok((language, code));
@@ -147,10 +146,10 @@ impl Config {
 
             let language = if let Some(language) = &self.language {
                 ps.find_syntax_by_token(language)
-                    .ok_or(format_err!("Unsupported language: {}", language))?
+                    .ok_or_else(|| format_err!("Unsupported language: {}", language))?
             } else {
                 ps.find_syntax_for_file(path)?
-                    .ok_or(format_err!("Failed to detect the language"))?
+                    .ok_or_else(|| format_err!("Failed to detect the language"))?
             };
 
             return Ok((language, s));
@@ -162,10 +161,10 @@ impl Config {
 
         let language = if let Some(language) = &self.language {
             ps.find_syntax_by_token(language)
-                .ok_or(format_err!("Unsupported language: {}", language))?
+                .ok_or_else(|| format_err!("Unsupported language: {}", language))?
         } else {
             ps.find_syntax_by_first_line(&s)
-                .ok_or(format_err!("Failed to detect the language"))?
+                .ok_or_else(|| format_err!("Failed to detect the language"))?
             // TODO: else ?
         };
 

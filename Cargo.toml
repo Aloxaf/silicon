@@ -3,6 +3,11 @@ name = "silicon"
 version = "0.1.0"
 description = "Create beautiful image of your code"
 authors = ["Aloxaf <aloxafx@gmail.com>"]
+categories = ["command-line-utilities"]
+readme = "README.md"
+repository = "https://github.com/Aloxaf/silicon"
+license = "MIT"
+build = "build.rs"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
