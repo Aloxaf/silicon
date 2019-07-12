@@ -243,7 +243,7 @@ pub fn draw_text_mut<I>(
                 let (x, y) = (px + x, py + y);
                 let pixel = image.get_pixel(x, y);
                 let weighted_color = weighted_sum(pixel, color, 1.0 - v, v);
-                image.put_pixel(px, py, weighted_color);
+                image.put_pixel(x, y, weighted_color);
             });
         }
     }
