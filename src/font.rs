@@ -136,6 +136,84 @@ impl ImageFont {
 struct Glyph {
     id: u32,
     raster_rect: Rect<i32>,
+    position: Point2D<i32>,
+}
+
+fn get_font_size(font: &Font, size: f32) -> Size2D<u32> {
+    let metrics = font.metrics();
+    let advance = font.advance(font.glyph_for_char('M').unwrap()).unwrap();
+    let height =
+        ((metrics.ascent - metrics.descent) / metrics.units_per_em as f32 * size).ceil() as u32;
+    let width = (advance / metrics.units_per_em as f32 * size).x.ceil() as u32;
+    Size2D::new(width, height)
+}
+
+fn get_layout(font: &Font, text: &str, size: f32) -> Vec<Option<Glyph>> {
+    let font_size = get_font_size(font, size);
+
+    text.chars()
+        .enumerate()
+        .map(|(i, c)| {
+            font.glyph_for_char(c).map(|glyph_id| {
+                let raster_rect = font
+                    .raster_bounds(
+                        glyph_id,
+                        size,
+                        &FontTransform::identity(),
+                        &Point2D::zero(),
+                        HintingOptions::None,
+                        RasterizationOptions::GrayscaleAa,
+                    )
+                    .unwrap();
+                let x = i as i32 * font_size.width as i32 + raster_rect.origin.x;
+                let y = font_size.height as i32 - raster_rect.size.height - raster_rect.origin.y;
+
+                Glyph {
+                    id: glyph_id,
+                    position: Point2D::new(x, y),
+                    raster_rect,
+                }
+            })
+        })
+        .collect()
+}
+
+impl Glyph {
+    // TODO: keep a copy/reference of these arguments in Glyph struct ?
+    fn draw<O: FnMut(u32, u32, f32)>(&self, font: &Font, size: f32, offset: i32, mut o: O) {
+        let mut canvas = Canvas::new(&self.raster_rect.size.to_u32(), Format::A8);
+
+        let origin = Point2D::new(
+            -self.raster_rect.origin.x,
+            self.raster_rect.size.height + self.raster_rect.origin.y,
+        )
+        .to_f32();
+
+        font.rasterize_glyph(
+            &mut canvas,
+            self.id,
+            size,
+            &FontTransform::identity(),
+            &origin,
+            HintingOptions::None,
+            RasterizationOptions::GrayscaleAa,
+        )
+        .unwrap();
+
+        for y in (0..self.raster_rect.size.height).rev() {
+            let (row_start, row_end) =
+                (y as usize * canvas.stride, (y + 1) as usize * canvas.stride);
+            let row = &canvas.pixels[row_start..row_end];
+
+            for x in 0..self.raster_rect.size.width {
+                let val = f32::from(row[x as usize]) / 255.0;
+                let px = self.position.x + x;
+                let py = self.position.y + y + offset;
+
+                o(px as u32, py as u32, val);
+            }
+        }
+    }
 }
 
 // edit from https://github.com/wezm/profont
@@ -152,95 +230,21 @@ pub fn draw_text_mut<I>(
     <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp<f32>,
 {
     let metrics = font.metrics();
-    let offset = (metrics.descent as f32 / metrics.units_per_em as f32 * size).round() as i32;
+    let offset = (metrics.descent / metrics.units_per_em as f32 * size).round() as i32;
 
-    let glyphs = text
-        .chars()
-        .map(|c| {
-            font.glyph_for_char(c).map(|glyph_id| {
-                let raster_rect = font
-                    .raster_bounds(
-                        glyph_id,
-                        size,
-                        &FontTransform::identity(),
-                        &Point2D::zero(),
-                        HintingOptions::None,
-                        RasterizationOptions::GrayscaleAa,
-                    )
-                    .unwrap();
-                Glyph {
-                    id: glyph_id,
-                    raster_rect,
-                }
-            })
-        })
-        .collect::<Vec<_>>();
+    let glyphs = get_layout(font, text, size);
 
-    let metrics = font.metrics();
-    let advance = font.advance(font.glyph_for_char('M').unwrap()).unwrap();
-
-    let height =
-        ((metrics.ascent - metrics.descent) / metrics.units_per_em as f32 * size).ceil() as u32;
-    let width = (advance / metrics.units_per_em as f32 * size).x.ceil() as u32;
-    let char_size = Size2D::new(width, height);
-
-    for (i, glyph) in glyphs.iter().enumerate() {
-        // TODO: None char ?
+    for glyph in glyphs {
         if let Some(glyph) = glyph {
-            // TODO: only alloc once?
-            let mut canvas = Canvas::new(&glyph.raster_rect.size.to_u32(), Format::A8);
-
-            let origin = Point2D::new(
-                -glyph.raster_rect.origin.x,
-                glyph.raster_rect.size.height + glyph.raster_rect.origin.y,
-            )
-            .to_f32();
-
-            font.rasterize_glyph(
-                &mut canvas,
-                glyph.id,
-                size,
-                &FontTransform::identity(),
-                &origin,
-                HintingOptions::None,
-                RasterizationOptions::GrayscaleAa,
-            )
-            .unwrap();
-
-            let img_x = i as u32 * char_size.width;
-            let img_y = 0 * char_size.height + char_size.height;
-
-            let iy = y;
-            let ix = x;
-            for y in (0..glyph.raster_rect.size.height as u32).rev() {
-                let (row_start, row_end) =
-                    (y as usize * canvas.stride, (y + 1) as usize * canvas.stride);
-                let row = &canvas.pixels[row_start..row_end];
-                for x in 0..glyph.raster_rect.size.width as u32 {
-                    let val = row[x as usize];
-                    if val != 0 {
-                        let pixel_x = img_x as i32 + x as i32 + glyph.raster_rect.origin.x;
-                        let pixel_y = img_y as i32 - glyph.raster_rect.size.height + y as i32
-                            - glyph.raster_rect.origin.y
-                            + offset;
-
-                        if pixel_x >= 0 && pixel_y >= 0 {
-                            let pixel = image.get_pixel(ix + pixel_x as u32, iy + pixel_y as u32);
-                            let weighted_color = weighted_sum(
-                                pixel,
-                                color,
-                                1.0 - val as f32 / 255.0,
-                                val as f32 / 255.0,
-                            );
-                            image.put_pixel(
-                                ix + pixel_x as u32,
-                                iy + pixel_y as u32,
-                                weighted_color,
-                            );
-                        }
-                    }
+            glyph.draw(font, size, offset, |px, py, v| {
+                if v <= std::f32::EPSILON {
+                    return;
                 }
-            }
+                let (x, y) = (px + x, py + y);
+                let pixel = image.get_pixel(x, y);
+                let weighted_color = weighted_sum(pixel, color, 1.0 - v, v);
+                image.put_pixel(px, py, weighted_color);
+            });
         }
     }
 }
