@@ -16,17 +16,28 @@ edition = "2018"
 syntect = "3.2"
 image = "0.21"
 imageproc = "0.18"
-rusttype = "0.7.7"
 font-kit = "0.3.1"
 failure = "0.1.5"
 clipboard = "0.5.0"
-structopt = { version = "0.2.18", default-features = false, features = [ "color", "wrap_help" ] }
 itertools = "0.8.0"
 tempfile = "3.1.0"
+conv = "0.3.3"
+euclid = "0.19"
+log = "0.4.7"
+
+[dependencies.structopt]
+version = "0.2"
+default-features = false
+features = [ "color", "wrap_help" ]
+
+[dependencies.env_logger]
+version = "0.6.2"
+default-features = false
+features = [ "termcolor", "atty", "humantime" ]
 
 [build-dependencies]
 syntect = "3.2"
 cc = "1.0.37"
 
-[profile.release]
-lto = true
+# [profile.release]
+# lto = true

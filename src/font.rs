@@ -3,45 +3,77 @@ use font_kit::family_name::FamilyName;
 use font_kit::handle::Handle;
 use font_kit::properties::{Properties, Style, Weight};
 use font_kit::source::SystemSource;
-use rusttype::{Font, FontCollection, Scale};
-use std::fs::File;
-use std::io::Read;
-use std::ops::Deref;
 use syntect::highlighting::FontStyle;
 
-pub struct ImageFont<'a> {
-    normal: Font<'a>,
-    italic: Font<'a>,
-    bold: Font<'a>,
-    size: f32,
+use conv::ValueInto;
+use euclid::{Point2D, Rect, Size2D};
+use font_kit::canvas::{Canvas, Format, RasterizationOptions};
+use font_kit::font::Font;
+use font_kit::hinting::HintingOptions;
+use font_kit::loader::FontTransform;
+use image::{GenericImage, Pixel};
+use imageproc::definitions::Clamp;
+use imageproc::pixelops::weighted_sum;
+use std::sync::Arc;
+
+#[derive(Debug)]
+pub struct ImageFont {
+    pub regular: Font,
+    pub italic: Font,
+    pub bold: Font,
+    pub bolditalic: Font,
+    pub size: f32,
 }
 
-impl<'a> ImageFont<'a> {
+impl ImageFont {
     pub fn new(font: &str, size: f32) -> Result<Self, Error> {
-        let normal = Self::search_font(font, &Properties::new())?;
-        let normal = Self::load_font(normal)?;
+        let regular = Self::search_font(font, &Properties::new())?;
+        let regular = regular.load()?;
+
+        debug!("regular: {:?}", regular);
+
+        if !regular.is_monospace() {
+            eprintln!("[warning] You're using a non-monospace font");
+        }
 
         let italic = Self::search_font(font, &Properties::new().style(Style::Italic))?;
-        let italic = Self::load_font(italic)?;
+        let italic = italic.load()?;
+
+        debug!("italic: {:?}", italic);
 
         let bold = Self::search_font(font, &Properties::new().weight(Weight::BOLD))?;
-        let bold = Self::load_font(bold)?;
+        let bold = bold.load()?;
+
+        debug!("bold: {:?}", bold);
+
+        let bolditalic = Self::search_font(
+            font,
+            &Properties::new().style(Style::Italic).weight(Weight::BOLD),
+        )?;
+        let bolditalic = bolditalic.load()?;
+
+        debug!("bolditalic: {:?}", bolditalic);
 
         Ok(Self {
-            normal,
+            regular,
             italic,
             bold,
+            bolditalic,
             size,
         })
     }
 
-    pub fn get_by_style(&self, style: &syntect::highlighting::Style) -> &Font<'a> {
+    pub fn get_by_style(&self, style: &syntect::highlighting::Style) -> &Font {
         if style.font_style.contains(FontStyle::BOLD) {
-            &self.bold
+            if style.font_style.contains(FontStyle::ITALIC) {
+                &self.bolditalic
+            } else {
+                &self.bold
+            }
         } else if style.font_style.contains(FontStyle::ITALIC) {
             &self.italic
         } else {
-            &self.normal
+            &self.regular
         }
     }
 
@@ -55,35 +87,21 @@ impl<'a> ImageFont<'a> {
         Ok(SystemSource::new().select_best_match(&family_names, properties)?)
     }
 
-    /// load font from path
-    fn load_font(handle: Handle) -> Result<Font<'a>, Error> {
-        if let Handle::Path { path, .. } = handle {
-            let mut file = File::open(path)?;
-            let mut bytes = vec![];
-
-            file.read_to_end(&mut bytes)?;
-            // may contain multiple fonts
-            Ok(FontCollection::from_bytes(bytes)?
-                .into_fonts()
-                .next()
-                .unwrap()?)
-        } else {
-            unreachable!()
-        }
-    }
-
     pub fn from_bytes(
-        normal: &'a [u8],
-        italic: &'a [u8],
-        bold: &'a [u8],
+        regular: Vec<u8>,
+        italic: Vec<u8>,
+        bold: Vec<u8>,
+        bolditalic: Vec<u8>,
         size: f32,
     ) -> Result<Self, Error> {
-        let normal = FontCollection::from_bytes(normal)?.into_font()?;
-        let italic = FontCollection::from_bytes(italic)?.into_font()?;
-        let bold = FontCollection::from_bytes(bold)?.into_font()?;
+        let regular = Font::from_bytes(Arc::new(regular), 0)?;
+        let italic = Font::from_bytes(Arc::new(italic), 0)?;
+        let bold = Font::from_bytes(Arc::new(bold), 0)?;
+        let bolditalic = Font::from_bytes(Arc::new(bolditalic), 0)?;
 
         Ok(Self {
-            normal,
+            regular,
+            bolditalic,
             italic,
             bold,
             size,
@@ -97,27 +115,132 @@ impl<'a> ImageFont<'a> {
 
     /// get the (width, height) of a char
     pub fn get_char_size(&self, c: char) -> (u32, u32) {
-        let scale = self.get_scale();
-        let c = self.normal.glyph(c);
-        let g = c.scaled(scale);
+        let metrics = self.regular.metrics();
+        let advance = self
+            .regular
+            .advance(self.regular.glyph_for_char(c).unwrap())
+            .unwrap();
 
-        let v_metrics = self.normal.v_metrics(scale);
-
-        let width = g.h_metrics().advance_width.round() as u32;
-        let height = (v_metrics.ascent - v_metrics.descent).ceil() as u32;
+        let width = (advance / metrics.units_per_em as f32 * self.size).x.ceil() as u32;
+        let height = ((metrics.ascent - metrics.descent) / metrics.units_per_em as f32 * self.size)
+            .ceil() as u32;
 
         (width, height)
     }
 
-    pub fn get_scale(&self) -> Scale {
-        Scale::uniform(self.size)
+    pub fn get_scale(&self) -> f32 {
+        self.size
     }
 }
 
-impl<'a> Deref for ImageFont<'a> {
-    type Target = rusttype::Font<'a>;
+struct Glyph {
+    id: u32,
+    raster_rect: Rect<i32>,
+}
 
-    fn deref(&self) -> &Self::Target {
-        &self.normal
+// edit from https://github.com/wezm/profont
+pub fn draw_text_mut<I>(
+    image: &mut I,
+    color: I::Pixel,
+    x: u32,
+    y: u32,
+    size: f32,
+    font: &Font,
+    text: &str,
+) where
+    I: GenericImage,
+    <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp<f32>,
+{
+    let metrics = font.metrics();
+    let offset = (metrics.descent as f32 / metrics.units_per_em as f32 * size).round() as i32;
+
+    let glyphs = text
+        .chars()
+        .map(|c| {
+            font.glyph_for_char(c).map(|glyph_id| {
+                let raster_rect = font
+                    .raster_bounds(
+                        glyph_id,
+                        size,
+                        &FontTransform::identity(),
+                        &Point2D::zero(),
+                        HintingOptions::None,
+                        RasterizationOptions::GrayscaleAa,
+                    )
+                    .unwrap();
+                Glyph {
+                    id: glyph_id,
+                    raster_rect,
+                }
+            })
+        })
+        .collect::<Vec<_>>();
+
+    let metrics = font.metrics();
+    let advance = font.advance(font.glyph_for_char('M').unwrap()).unwrap();
+
+    let height =
+        ((metrics.ascent - metrics.descent) / metrics.units_per_em as f32 * size).ceil() as u32;
+    let width = (advance / metrics.units_per_em as f32 * size).x.ceil() as u32;
+    let char_size = Size2D::new(width, height);
+
+    for (i, glyph) in glyphs.iter().enumerate() {
+        // TODO: None char ?
+        if let Some(glyph) = glyph {
+            // TODO: only alloc once?
+            let mut canvas = Canvas::new(&glyph.raster_rect.size.to_u32(), Format::A8);
+
+            let origin = Point2D::new(
+                -glyph.raster_rect.origin.x,
+                glyph.raster_rect.size.height + glyph.raster_rect.origin.y,
+            )
+            .to_f32();
+
+            font.rasterize_glyph(
+                &mut canvas,
+                glyph.id,
+                size,
+                &FontTransform::identity(),
+                &origin,
+                HintingOptions::None,
+                RasterizationOptions::GrayscaleAa,
+            )
+            .unwrap();
+
+            let img_x = i as u32 * char_size.width;
+            let img_y = 0 * char_size.height + char_size.height;
+
+            let iy = y;
+            let ix = x;
+            for y in (0..glyph.raster_rect.size.height as u32).rev() {
+                let (row_start, row_end) =
+                    (y as usize * canvas.stride, (y + 1) as usize * canvas.stride);
+                let row = &canvas.pixels[row_start..row_end];
+                for x in 0..glyph.raster_rect.size.width as u32 {
+                    let val = row[x as usize];
+                    if val != 0 {
+                        let pixel_x = img_x as i32 + x as i32 + glyph.raster_rect.origin.x;
+                        let pixel_y = img_y as i32 - glyph.raster_rect.size.height + y as i32
+                            - glyph.raster_rect.origin.y
+                            + offset;
+
+                        if pixel_x >= 0 && pixel_y >= 0 {
+                            let pixel = image.get_pixel(ix + pixel_x as u32, iy + pixel_y as u32);
+                            let weighted_color = weighted_sum(
+                                pixel,
+                                color,
+                                1.0 - val as f32 / 255.0,
+                                val as f32 / 255.0,
+                            );
+                            image.put_pixel(
+                                ix + pixel_x as u32,
+                                iy + pixel_y as u32,
+                                weighted_color,
+                            );
+                        }
+                    }
+                }
+            }
+        }
     }
 }

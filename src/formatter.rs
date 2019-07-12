@@ -1,13 +1,12 @@
 use crate::font::ImageFont;
 use crate::utils::ToRgba;
 use failure::Error;
+use font_kit::font::Font;
 use image::{DynamicImage, Rgba, RgbaImage};
-use imageproc::drawing::draw_text_mut;
 use itertools::Itertools;
-use rusttype::Font;
 use syntect::highlighting::{Color, Style, Theme};
 
-pub struct ImageFormatter<'a> {
+pub struct ImageFormatter {
     /// pad between lines
     /// Default: 2
     line_pad: u32,
@@ -28,17 +27,17 @@ pub struct ImageFormatter<'a> {
     line_number_chars: u32,
     /// font of english character, should be mono space font
     /// Default: Hack (builtin)
-    font: ImageFont<'a>,
+    font: ImageFont,
     /// font size of `.font`. (width, height)
     font_size: (u32, u32),
     /// font of cjk character
     /// Default: None
-    cjk_font: Option<ImageFont<'a>>,
+    cjk_font: Option<ImageFont>,
     /// font size of `.cjk_font`. (width, height)
     cjk_font_size: (u32, u32),
 }
 
-pub struct ImageFormatterBuilder<'a> {
+pub struct ImageFormatterBuilder {
     /// pad between lines
     line_pad: u32,
     /// show line number
@@ -46,21 +45,22 @@ pub struct ImageFormatterBuilder<'a> {
     /// pad of top of the code area
     code_pad_top: u32,
     /// font of english character, should be mono space font
-    font: ImageFont<'a>,
+    font: ImageFont,
     /// font size of `.font`. (width, height)
     font_size: (u32, u32),
     /// font of cjk character
-    cjk_font: Option<ImageFont<'a>>,
+    cjk_font: Option<ImageFont>,
     /// font size of `.cjk_font`. (width, height)
     cjk_font_size: (u32, u32),
 }
 
-impl<'a> ImageFormatterBuilder<'a> {
+impl<'a> ImageFormatterBuilder {
     pub fn new() -> Self {
         let font = ImageFont::from_bytes(
-            include_bytes!("../assets/fonts/Hack-Regular.ttf"),
-            include_bytes!("../assets/fonts/Hack-Italic.ttf"),
-            include_bytes!("../assets/fonts/Hack-Bold.ttf"),
+            include_bytes!("../assets/fonts/Hack-Regular.ttf").to_vec(),
+            include_bytes!("../assets/fonts/Hack-Italic.ttf").to_vec(),
+            include_bytes!("../assets/fonts/Hack-Bold.ttf").to_vec(),
+            include_bytes!("../assets/fonts/Hack-BoldItalic.ttf").to_vec(),
             26.0,
         )
         .unwrap();
@@ -121,7 +121,7 @@ impl<'a> ImageFormatterBuilder<'a> {
         self
     }
 
-    pub fn build(mut self) -> ImageFormatter<'a> {
+    pub fn build(mut self) -> ImageFormatter {
         ImageFormatter {
             line_pad: self.line_pad,
             code_pad: 25,
@@ -137,15 +137,16 @@ impl<'a> ImageFormatterBuilder<'a> {
     }
 }
 
-struct Drawable<'a> {
+struct Drawable {
     /// max width of the picture
     max_width: u32,
     /// max number of line of the picture
     max_lineno: u32,
-    drawables: Vec<(u32, u32, Color, &'a Font<'a>, String)>,
+    // TODO: cost of Font.clone() ??
+    drawables: Vec<(u32, u32, Color, Font, String)>,
 }
 
-impl<'a> ImageFormatter<'a> {
+impl ImageFormatter {
     /// calculate the X coordinate after some number of characters
     fn get_char_x(&self, charno: u32, cjk_charno: u32) -> u32 {
         charno * self.font_size.0
@@ -182,10 +183,7 @@ impl<'a> ImageFormatter<'a> {
     }
 
     /// create
-    fn create_drawables<'b>(&'b self, v: &'b [Vec<(Style, &'a str)>]) -> Drawable<'b>
-    where
-        'a: 'b,
-    {
+    fn create_drawables(&self, v: &[Vec<(Style, &str)>]) -> Drawable {
         let mut drawables = vec![];
         let (mut max_width, mut max_lineno) = (0, 0);
 
@@ -210,14 +208,26 @@ impl<'a> ImageFormatter<'a> {
                         // let text = text.trim_end_matches('\n');
                         let font = self.font.get_by_style(style);
 
-                        drawables.push((width, height, style.foreground, font, text.to_owned()));
+                        drawables.push((
+                            width,
+                            height,
+                            style.foreground,
+                            font.clone(),
+                            text.to_owned(),
+                        ));
                         // TODO: UNDERLINE & combine of these
 
                         charno += text.len() as u32;
                     } else if let Some(cjk_font) = &self.cjk_font {
                         let font = cjk_font.get_by_style(style);
 
-                        drawables.push((width, height, style.foreground, font, text.to_owned()));
+                        drawables.push((
+                            width,
+                            height,
+                            style.foreground,
+                            font.clone(),
+                            text.to_owned(),
+                        ));
                         cjk_charno += text.chars().count() as u32;
                     }
                 }
@@ -236,13 +246,13 @@ impl<'a> ImageFormatter<'a> {
     fn draw_line_number(&self, image: &mut DynamicImage, lineno: u32, color: Rgba<u8>) {
         for i in 0..=lineno {
             let line_mumber = format!("{:>width$}", i + 1, width = self.line_number_chars as usize);
-            draw_text_mut(
+            crate::font::draw_text_mut(
                 image,
                 color,
                 self.code_pad,
                 self.get_line_y(i),
                 self.font.get_scale(),
-                &self.font,
+                &self.font.regular,
                 &line_mumber,
             );
         }
@@ -275,7 +285,15 @@ impl<'a> ImageFormatter<'a> {
 
         for (x, y, color, font, text) in drawables.drawables {
             let color = color.to_rgba();
-            draw_text_mut(&mut image, color, x, y, self.font.get_scale(), &font, &text);
+            crate::font::draw_text_mut(
+                &mut image,
+                color,
+                x,
+                y,
+                self.font.get_scale(),
+                &font,
+                &text,
+            );
         }
 
         image

@@ -1,4 +1,6 @@
 #[macro_use]
+extern crate log;
+#[macro_use]
 extern crate failure;
 
 use crate::config::Config;
@@ -68,6 +70,8 @@ fn run() -> Result<(), Error> {
 }
 
 fn main() {
+    env_logger::init();
+
     if let Err(e) = run() {
         eprintln!("[error] {}", e);
     }
