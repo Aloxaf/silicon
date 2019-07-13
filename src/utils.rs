@@ -1,6 +1,6 @@
 use failure::Error;
-use image::imageops::{blur, crop};
-use image::{DynamicImage, GenericImage, GenericImageView, Rgba, RgbaImage};
+use image::imageops::{crop, resize};
+use image::{DynamicImage, FilterType, GenericImage, GenericImageView, Rgba, RgbaImage};
 use image::{ImageOutputFormat, Pixel};
 use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut};
 use imageproc::rect::Rect;
@@ -38,27 +38,30 @@ pub fn add_window_controls(image: &mut DynamicImage) {
         ("#27C93F", "#1AAB29"),
     ];
 
-    let background = image.get_pixel(37, 37);
+    let mut background = image.get_pixel(37, 37);
+    background.data[3] = 0;
 
-    let mut title_bar = RgbaImage::from_pixel(120, 40, background);
+    let mut title_bar = RgbaImage::from_pixel(120 * 3, 40 * 3, background);
 
     for (i, (fill, outline)) in color.iter().enumerate() {
         draw_filled_circle_mut(
             &mut title_bar,
-            ((i * 40) as i32 + 20, 20),
-            10,
+            (((i * 40) as i32 + 20) * 3, 20 * 3),
+            11 * 3,
             outline.to_rgba().unwrap(),
         );
         draw_filled_circle_mut(
             &mut title_bar,
-            ((i * 40) as i32 + 20, 20),
-            9,
+            (((i * 40) as i32 + 20) * 3, 20 * 3),
+            10 * 3,
             fill.to_rgba().unwrap(),
         );
     }
-    let title_bar = blur(&title_bar, 0.48);
+    // create a big image and resize it to blur the edge
+    // it looks better than `blur()`
+    let title_bar = resize(&title_bar, 120, 40, FilterType::Triangle);
 
-    image.copy_from(&title_bar, 15, 15);
+    copy_alpha(&title_bar, image, 15, 15);
 }
 
 #[derive(Debug)]
@@ -157,7 +160,10 @@ where
     for i in 0..src.width() {
         for j in 0..src.height() {
             let p = src.get_pixel(i, j);
-            dst.get_pixel_mut(i + x, j + y).blend(&p);
+            let mut o = dst.get_pixel(i + x, j + y);
+            o.blend(&p);
+            dst.put_pixel(i + x, j + y, o);
+            // dst.get_pixel_mut(i + x, j + y).blend(&p);
         }
     }
 }

@@ -23,7 +23,7 @@ pub fn gaussian_blur(image: RgbaImage, sigma: f32) -> RgbaImage {
     RgbaImage::from_raw(width, height, raw).unwrap()
 }
 
-pub fn gaussian_blur_impl(data: &mut Vec<[u8; 4]>, width: usize, height: usize, blur_radius: f32) {
+fn gaussian_blur_impl(data: &mut Vec<[u8; 4]>, width: usize, height: usize, blur_radius: f32) {
     let bxs = create_box_gauss(blur_radius, 3);
     let mut backbuf = data.clone();
 
