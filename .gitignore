@@ -1,5 +1,3 @@
 /target
 **/*.rs.bk
 /.idea
-/assets/syntaxes
-/assets/themes
