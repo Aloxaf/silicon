@@ -19,6 +19,7 @@ mod blur;
 mod config;
 mod font;
 mod formatter;
+mod new_font;
 mod utils;
 
 fn run() -> Result<(), Error> {
