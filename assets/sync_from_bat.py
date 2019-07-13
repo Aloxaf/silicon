@@ -16,4 +16,6 @@ for syntax_file in glob('../../bat/assets/syntaxes/**/*.sublime-syntax'):
 for theme_file in glob('../../bat/assets/themes/**/*.tmTheme'):
     copy(theme_file, './themes/')
 
+os.system('bat cache --build --source . --target .')
+
 print('Finished.')
