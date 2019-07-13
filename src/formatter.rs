@@ -56,14 +56,8 @@ pub struct ImageFormatterBuilder {
 
 impl<'a> ImageFormatterBuilder {
     pub fn new() -> Self {
-        let font = ImageFont::from_bytes(
-            include_bytes!("../assets/fonts/Hack-Regular.ttf").to_vec(),
-            include_bytes!("../assets/fonts/Hack-Italic.ttf").to_vec(),
-            include_bytes!("../assets/fonts/Hack-Bold.ttf").to_vec(),
-            include_bytes!("../assets/fonts/Hack-BoldItalic.ttf").to_vec(),
-            26.0,
-        )
-        .unwrap();
+        let font = ImageFont::default();
+
         Self {
             line_pad: 2,
             line_number: true,
@@ -206,7 +200,7 @@ impl ImageFormatter {
 
                     if text.as_bytes()[0].is_ascii() || self.cjk_font.is_none() {
                         // let text = text.trim_end_matches('\n');
-                        let font = self.font.get_by_style(style);
+                        let font = self.font.get_by_style(style.font_style.into());
 
                         drawables.push((
                             width,
@@ -219,7 +213,7 @@ impl ImageFormatter {
 
                         charno += text.len() as u32;
                     } else if let Some(cjk_font) = &self.cjk_font {
-                        let font = cjk_font.get_by_style(style);
+                        let font = cjk_font.get_by_style(style.font_style.into());
 
                         drawables.push((
                             width,
@@ -251,8 +245,8 @@ impl ImageFormatter {
                 color,
                 self.code_pad,
                 self.get_line_y(i),
-                self.font.get_scale(),
-                &self.font.regular,
+                self.font.size,
+                &self.font.get_reaular(),
                 &line_mumber,
             );
         }
@@ -285,15 +279,7 @@ impl ImageFormatter {
 
         for (x, y, color, font, text) in drawables.drawables {
             let color = color.to_rgba();
-            crate::font::draw_text_mut(
-                &mut image,
-                color,
-                x,
-                y,
-                self.font.get_scale(),
-                &font,
-                &text,
-            );
+            crate::font::draw_text_mut(&mut image, color, x, y, self.font.size, &font, &text);
         }
 
         image
