@@ -261,7 +261,7 @@ impl ImageFormatter {
     // TODO: &mut ?
     pub fn format(&mut self, v: &[Vec<(Style, &str)>], theme: &Theme) -> DynamicImage {
         if self.line_number {
-            self.line_number_chars = (v.len() as f32).log10().ceil() as u32;
+            self.line_number_chars = ((v.len() as f32).log10() + 1.0).floor() as u32;
         } else {
             self.line_number_chars = 0;
             self.line_number_pad = 0;

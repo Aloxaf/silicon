@@ -19,7 +19,7 @@ fn parse_str_color(s: &str) -> Result<Rgba<u8>, Error> {
 #[structopt(name = "silicon", rename_all = "kebab")]
 pub struct Config {
     /// The syntax highlight theme. It can be a theme name or path to a .tmTheme file.
-    #[structopt(long, default_value = "Monokai Extended")]
+    #[structopt(long, default_value = "Dracula")]
     pub theme: String,
 
     /// The base font.
