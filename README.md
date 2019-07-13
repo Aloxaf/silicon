@@ -1,6 +1,11 @@
-# Silicon (WIP)
+# Silicon
+
+[![crates.io](https://img.shields.io/crates/v/silicon.svg)](https://crates.io/crates/silicon)
+![license](https://img.shields.io/crates/l/silicon.svg)
 
 Silicon is an alternative to [Carbon](https://github.com/dawnlabs/carbon) implemented in Rust.
+
+<img src="http://storage.aloxaf.cn/silicon.png">
 
 ## Why Silicon
 
@@ -27,7 +32,7 @@ cargo install silicon
 
 `xclip` is required on Linux for clipboard support.
 
-## Usage
+## Basic Usage
 
 Read code from file
 
