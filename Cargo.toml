@@ -37,7 +37,6 @@ features = [ "termcolor", "atty", "humantime" ]
 
 [build-dependencies]
 syntect = "3.2"
-cc = "1.0.37"
 
 # [profile.release]
 # lto = true

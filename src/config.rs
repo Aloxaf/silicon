@@ -85,7 +85,7 @@ pub struct Config {
     pub shadow_color: Rgba<u8>,
 
     /// Blur radius of the shadow
-    #[structopt(long, value_name = "radius", default_value = "10.0")]
+    #[structopt(long, value_name = "radius", default_value = "70.0")]
     pub shadow_blur_radius: f32,
 
     /// Pad horiz

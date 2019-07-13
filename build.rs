@@ -27,11 +27,4 @@ fn create_syntax_dump() {
 fn main() {
     create_theme_dump();
     create_syntax_dump();
-
-    cc::Build::new()
-        .file("src/gauss/gauss.c")
-        .cpp(false)
-        .flag("-march=native")
-        .opt_level(2)
-        .compile("gauss");
 }
