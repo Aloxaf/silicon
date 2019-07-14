@@ -5,7 +5,7 @@
 
 Silicon is an alternative to [Carbon](https://github.com/dawnlabs/carbon) implemented in Rust.
 
-<img width="66%" src="http://storage.aloxaf.cn/silicon.png">
+<img width="66%" src="http://storage.aloxaf.cn/silicon.png?">
 
 ## Why Silicon
 
