@@ -18,7 +18,7 @@ But it is a web application, which brings the following disadvantages:
 However, Silicon doesn't have these problem.
 It's is implemented in Rust and can work without browser & Internet.
 
-Silicon can render your source code within 0.2 second while _carbon-now-cli_ takes several seconds on it.
+Silicon can render your source code one the fly while _carbon-now-cli_ takes several seconds on it.
 
 ## Disadvantages
 
@@ -43,21 +43,19 @@ silicon main.rs -o main.png
 Read code from clipboard, and copy the result image to clipboard(`--to-clipboard` is only available on Linux)
 
 ```
-silicon --from-clipboard --language rs --to-clipboard
+silicon --from-clipboard --l rs --to-clipboard
+```
+
+Use multiple fonts
+
+```
+silicon main.rs -o main.png -f 'Hack; SimSun'
+```
+
+Highlight specified line
+
+```
+silicon main.rs -o main.png --highlight-lines '1; 3-4'
 ```
 
 see `silicon --help` for detail
-
-## TODO
-
-- [x] MVP 
-- [x] More themes
-- [x] More syntaxes support
-- [x] Better font support
-- [ ] Clipboard support
-  - [x] Get code from clipboard
-  - [ ] Paste the image to clipboard
-    - [x] Linux
-    - [ ] Windows
-    - [ ] MacOS
-- [ ] Watermark
