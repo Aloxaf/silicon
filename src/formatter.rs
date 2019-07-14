@@ -100,7 +100,7 @@ struct Drawable {
     max_width: u32,
     /// max number of line of the picture
     max_lineno: u32,
-    // TODO: cost of Font.clone() ??
+    /// arguments for draw_text_mut
     drawables: Vec<(u32, u32, Color, FontStyle, String)>,
 }
 
@@ -118,7 +118,7 @@ impl ImageFormatter {
     /// calculate the size of code area
     fn get_image_size(&self, max_width: u32, lineno: u32) -> (u32, u32) {
         (
-            max_width + self.code_pad,
+            (max_width + self.code_pad).max(150),
             self.get_line_y(lineno + 1) + self.code_pad,
         )
     }
