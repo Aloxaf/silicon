@@ -1,9 +1,7 @@
-use crate::font::ImageFont;
+use crate::font::{FontCollection, FontStyle};
 use crate::utils::ToRgba;
 use failure::Error;
-use font_kit::font::Font;
 use image::{DynamicImage, Rgba, RgbaImage};
-use itertools::Itertools;
 use syntect::highlighting::{Color, Style, Theme};
 
 pub struct ImageFormatter {
@@ -27,14 +25,7 @@ pub struct ImageFormatter {
     line_number_chars: u32,
     /// font of english character, should be mono space font
     /// Default: Hack (builtin)
-    font: ImageFont,
-    /// font size of `.font`. (width, height)
-    font_size: (u32, u32),
-    /// font of cjk character
-    /// Default: None
-    cjk_font: Option<ImageFont>,
-    /// font size of `.cjk_font`. (width, height)
-    cjk_font_size: (u32, u32),
+    font: FontCollection,
 }
 
 pub struct ImageFormatterBuilder {
@@ -45,27 +36,16 @@ pub struct ImageFormatterBuilder {
     /// pad of top of the code area
     code_pad_top: u32,
     /// font of english character, should be mono space font
-    font: ImageFont,
-    /// font size of `.font`. (width, height)
-    font_size: (u32, u32),
-    /// font of cjk character
-    cjk_font: Option<ImageFont>,
-    /// font size of `.cjk_font`. (width, height)
-    cjk_font_size: (u32, u32),
+    font: FontCollection,
 }
 
 impl<'a> ImageFormatterBuilder {
     pub fn new() -> Self {
-        let font = ImageFont::default();
-
         Self {
             line_pad: 2,
             line_number: true,
             code_pad_top: 50,
-            font_size: font.get_size(),
-            cjk_font: None,
-            cjk_font_size: (0, 0),
-            font,
+            font: FontCollection::default(),
         }
     }
 
@@ -84,38 +64,13 @@ impl<'a> ImageFormatterBuilder {
         self
     }
 
-    pub fn font(mut self, name: &str, size: f32) -> Result<Self, Error> {
-        let font = ImageFont::new(name, size)
-            .map_err(|e| format_err!("Cannot load font `{}`: {}", name, e))?;
-        self.font_size = font.get_size();
+    pub fn font<S: AsRef<str>>(mut self, fonts: &[(S, f32)]) -> Result<Self, Error> {
+        let font = FontCollection::new(fonts)?;
         self.font = font;
         Ok(self)
     }
 
-    pub fn cjk_font(mut self, name: &str, size: f32) -> Result<Self, Error> {
-        let font = ImageFont::new(name, size)
-            .map_err(|e| format_err!("Cannot load font `{}`: {}", name, e))?;
-        self.cjk_font_size = font.get_size();
-        self.cjk_font = Some(font);
-        Ok(self)
-    }
-
-    pub fn font_size(mut self, size: f32) -> Self {
-        self.font.set_size(size);
-        // TODO: font_size 和 font_size 命名
-        self.font_size = self.font.get_size();
-        self
-    }
-
-    pub fn cjk_font_size(mut self, size: f32) -> Self {
-        if let Some(cjk_font) = &mut self.cjk_font {
-            cjk_font.set_size(size);
-            self.cjk_font_size = cjk_font.get_size();
-        }
-        self
-    }
-
-    pub fn build(mut self) -> ImageFormatter {
+    pub fn build(self) -> ImageFormatter {
         ImageFormatter {
             line_pad: self.line_pad,
             code_pad: 25,
@@ -123,9 +78,6 @@ impl<'a> ImageFormatterBuilder {
             line_number: self.line_number,
             line_number_pad: 6,
             line_number_chars: 0,
-            font_size: self.font_size,
-            cjk_font_size: self.cjk_font_size,
-            cjk_font: std::mem::replace(&mut self.cjk_font, None),
             font: self.font,
         }
     }
@@ -137,35 +89,18 @@ struct Drawable {
     /// max number of line of the picture
     max_lineno: u32,
     // TODO: cost of Font.clone() ??
-    drawables: Vec<(u32, u32, Color, Font, String)>,
+    drawables: Vec<(u32, u32, Color, FontStyle, String)>,
 }
 
 impl ImageFormatter {
-    /// calculate the X coordinate after some number of characters
-    fn get_char_x(&self, charno: u32, cjk_charno: u32) -> u32 {
-        charno * self.font_size.0
-            + cjk_charno * self.cjk_font_size.0
-            + self.code_pad
-            + if self.line_number {
-                self.font_size.0 * self.line_number_chars + 2 * self.line_number_pad
-            } else {
-                0
-            }
-    }
-
     /// calculate the height of a line
     fn get_line_height(&self) -> u32 {
-        self.font_size.1 + self.line_pad
+        self.font.get_font_height() + self.line_pad
     }
 
     /// calculate the Y coordinate of a line
     fn get_line_y(&self, lineno: u32) -> u32 {
         lineno * self.get_line_height() + self.code_pad + self.code_pad_top
-    }
-
-    /// calculate the coordinate of text
-    fn _get_text_pos(&self, charno: u32, cjk_charno: u32, lineno: u32) -> (u32, u32) {
-        (self.get_char_x(charno, cjk_charno), self.get_line_y(lineno))
     }
 
     /// calculate the size of code area
@@ -176,6 +111,17 @@ impl ImageFormatter {
         )
     }
 
+    /// Calculate where code start
+    fn get_left_pad(&self) -> u32 {
+        self.code_pad
+            + if self.line_number {
+                let tmp = format!("{:>width$}", 0, width = self.line_number_chars as usize);
+                2 * self.line_number_pad + self.font.get_text_len(&tmp)
+            } else {
+                0
+            }
+    }
+
     /// create
     fn create_drawables(&self, v: &[Vec<(Style, &str)>]) -> Drawable {
         let mut drawables = vec![];
@@ -183,49 +129,25 @@ impl ImageFormatter {
 
         for (i, tokens) in v.iter().enumerate() {
             let height = self.get_line_y(i as u32);
-            let (mut charno, mut cjk_charno) = (0, 0);
+            let mut width = self.get_left_pad();
 
             for (style, text) in tokens {
-                // render ASCII character and non-ASCII character with different font
-                for (_k, group) in &text.chars().group_by(|c| c.is_ascii()) {
-                    // '\n' can't be draw to image
-                    let text = group.collect::<String>();
-                    let text: &str = text.trim_end_matches('\n');
-
-                    let width = self.get_char_x(charno, cjk_charno);
-
-                    if text.is_empty() {
-                        continue;
-                    }
-
-                    if text.as_bytes()[0].is_ascii() || self.cjk_font.is_none() {
-                        // let text = text.trim_end_matches('\n');
-                        let font = self.font.get_by_style(style.font_style.into());
-
-                        drawables.push((
-                            width,
-                            height,
-                            style.foreground,
-                            font.clone(),
-                            text.to_owned(),
-                        ));
-                        // TODO: UNDERLINE & combine of these
-
-                        charno += text.len() as u32;
-                    } else if let Some(cjk_font) = &self.cjk_font {
-                        let font = cjk_font.get_by_style(style.font_style.into());
-
-                        drawables.push((
-                            width,
-                            height,
-                            style.foreground,
-                            font.clone(),
-                            text.to_owned(),
-                        ));
-                        cjk_charno += text.chars().count() as u32;
-                    }
+                let text = text.trim_end_matches('\n');
+                if text.is_empty() {
+                    continue;
                 }
-                max_width = max_width.max(self.get_char_x(charno, cjk_charno));
+
+                drawables.push((
+                    width,
+                    height,
+                    style.foreground,
+                    style.font_style.into(),
+                    text.to_owned(),
+                ));
+
+                width += self.font.get_text_len(text);
+
+                max_width = max_width.max(width);
             }
             max_lineno = i as u32;
         }
@@ -240,13 +162,12 @@ impl ImageFormatter {
     fn draw_line_number(&self, image: &mut DynamicImage, lineno: u32, color: Rgba<u8>) {
         for i in 0..=lineno {
             let line_mumber = format!("{:>width$}", i + 1, width = self.line_number_chars as usize);
-            crate::font::draw_text_mut(
+            self.font.draw_text_mut(
                 image,
                 color,
                 self.code_pad,
                 self.get_line_y(i),
-                self.font.size,
-                &self.font.get_reaular(),
+                FontStyle::REGULAR,
                 &line_mumber,
             );
         }
@@ -277,9 +198,10 @@ impl ImageFormatter {
             self.draw_line_number(&mut image, drawables.max_lineno, foreground);
         }
 
-        for (x, y, color, font, text) in drawables.drawables {
+        for (x, y, color, style, text) in drawables.drawables {
             let color = color.to_rgba();
-            crate::font::draw_text_mut(&mut image, color, x, y, self.font.size, &font, &text);
+            self.font
+                .draw_text_mut(&mut image, color, x, y, style, &text);
         }
 
         image

@@ -15,6 +15,20 @@ fn parse_str_color(s: &str) -> Result<Rgba<u8>, Error> {
         .map_err(|_| format_err!("Invalid color: `{}`", s))?)
 }
 
+fn parse_font_str(s: &str) -> Vec<(String, f32)> {
+    let mut result = vec![];
+    for font in s.split(';') {
+        let tmp = font.split('=').collect::<Vec<&str>>();
+        let font_name = tmp[0].to_owned();
+        let font_size = tmp
+            .get(1)
+            .map(|s| s.parse::<f32>().unwrap())
+            .unwrap_or(26.0);
+        result.push((font_name, font_size));
+    }
+    result
+}
+
 #[derive(StructOpt, Debug)]
 #[structopt(name = "silicon", rename_all = "kebab")]
 pub struct Config {
@@ -22,21 +36,9 @@ pub struct Config {
     #[structopt(long, default_value = "Dracula")]
     pub theme: String,
 
-    /// The base font.
-    #[structopt(long)]
-    pub font: Option<String>,
-
-    /// Size of the base font.
-    #[structopt(long, value_name = "size", default_value = "27.0")]
-    pub font_size: f32,
-
-    /// The CJK font.
-    #[structopt(long, value_name = "font")]
-    pub cjk_font: Option<String>,
-
-    /// Size of the CJK font.
-    #[structopt(long, value_name = "size", default_value = "27.0")]
-    pub cjk_size: f32,
+    /// The font list. eg. 'Hack; SimSun=31'
+    #[structopt(long, parse(from_str = "parse_font_str"))]
+    pub font: Option<Vec<(String, f32)>>,
 
     /// Pad between lines
     #[structopt(long, default_value = "2")]
@@ -185,16 +187,9 @@ impl Config {
     }
 
     pub fn get_formatter(&self) -> Result<ImageFormatter, Error> {
-        let mut formatter = ImageFormatterBuilder::new()
-            .line_pad(self.line_pad)
-            .font_size(self.font_size)
-            .cjk_font_size(self.cjk_size);
-
-        if let Some(name) = &self.font {
-            formatter = formatter.font(name, self.font_size)?;
-        }
-        if let Some(name) = &self.cjk_font {
-            formatter = formatter.cjk_font(name, self.cjk_size)?;
+        let mut formatter = ImageFormatterBuilder::new().line_pad(self.line_pad);
+        if let Some(fonts) = &self.font {
+            formatter = formatter.font(fonts)?;
         }
         if self.no_line_number {
             formatter = formatter.line_number(false);
