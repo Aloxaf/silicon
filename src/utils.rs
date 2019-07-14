@@ -61,7 +61,7 @@ pub fn add_window_controls(image: &mut DynamicImage) {
     // it looks better than `blur()`
     let title_bar = resize(&title_bar, 120, 40, FilterType::Triangle);
 
-    copy_alpha(&title_bar, image, 15, 15);
+    copy_alpha(&title_bar, image.as_mut_rgba8().unwrap(), 15, 15);
 }
 
 #[derive(Debug)]
@@ -146,26 +146,33 @@ impl ShadowAdder {
         // shadow = blur(&shadow, self.blur_radius);
 
         // copy the original image to the top of it
-        copy_alpha(image, &mut shadow, self.pad_horiz, self.pad_vert);
+        copy_alpha(
+            image.as_rgba8().unwrap(),
+            &mut shadow,
+            self.pad_horiz,
+            self.pad_vert,
+        );
 
         DynamicImage::ImageRgba8(shadow)
     }
 }
 
 /// copy from src to dst, taking into account alpha channels
-pub fn copy_alpha<F, T>(src: &F, dst: &mut T, x: u32, y: u32)
-where
-    F: GenericImageView<Pixel = T::Pixel>,
-    T: GenericImage,
-{
-    // let mut dst = dst.as_mut_rgba8().unwrap();
-    for i in 0..src.width() {
-        for j in 0..src.height() {
-            let p = src.get_pixel(i, j);
-            let mut o = dst.get_pixel(i + x, j + y);
-            o.blend(&p);
-            dst.put_pixel(i + x, j + y, o);
-            // dst.get_pixel_mut(i + x, j + y).blend(&p);
+pub fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
+    assert!(src.width() + x <= dst.width());
+    assert!(src.height() + y <= dst.height());
+    for j in 0..src.height() {
+        for i in 0..src.width() {
+            unsafe {
+                let s = src.unsafe_get_pixel(i, j);
+                let mut d = dst.unsafe_get_pixel(i + x, j + y);
+                match s.data[3] {
+                    255 => d = s,
+                    0 => (/* do nothing */),
+                    _ => d.blend(&s),
+                }
+                dst.unsafe_put_pixel(i + x, j + y, d);
+            }
         }
     }
 }

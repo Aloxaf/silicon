@@ -198,7 +198,7 @@ impl ImageFormatter {
 
         for i in lines {
             let y = self.get_line_y(*i - 1);
-            copy_alpha(&shadow, image, 0, y);
+            copy_alpha(&shadow, image.as_mut_rgba8().unwrap(), 0, y);
         }
     }
 
