@@ -1,6 +1,6 @@
 [package]
 name = "silicon"
-version = "0.2.0"
+version = "0.2.1"
 description = "Create beautiful image of your code"
 authors = ["Aloxaf <aloxafx@gmail.com>"]
 categories = ["command-line-utilities"]
