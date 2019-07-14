@@ -131,15 +131,17 @@ impl ShadowAdder {
         // create the shadow
         let mut shadow = RgbaImage::from_pixel(width, height, self.background);
 
-        let rect = Rect::at(
-            self.pad_horiz as i32 + self.offset_x,
-            self.pad_vert as i32 + self.offset_y,
-        )
-        .of_size(image.width(), image.height());
+        if self.blur_radius > 0.0 {
+            let rect = Rect::at(
+                self.pad_horiz as i32 + self.offset_x,
+                self.pad_vert as i32 + self.offset_y,
+            )
+            .of_size(image.width(), image.height());
 
-        draw_filled_rect_mut(&mut shadow, rect, self.shadow_color);
+            draw_filled_rect_mut(&mut shadow, rect, self.shadow_color);
 
-        shadow = crate::blur::gaussian_blur(shadow, self.blur_radius);
+            shadow = crate::blur::gaussian_blur(shadow, self.blur_radius);
+        }
         // it's to slow!
         // shadow = blur(&shadow, self.blur_radius);
 
@@ -151,7 +153,7 @@ impl ShadowAdder {
 }
 
 /// copy from src to dst, taking into account alpha channels
-fn copy_alpha<F, T>(src: &F, dst: &mut T, x: u32, y: u32)
+pub fn copy_alpha<F, T>(src: &F, dst: &mut T, x: u32, y: u32)
 where
     F: GenericImageView<Pixel = T::Pixel>,
     T: GenericImage,

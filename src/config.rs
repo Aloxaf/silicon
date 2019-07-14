@@ -5,6 +5,7 @@ use failure::Error;
 use image::Rgba;
 use std::fs::File;
 use std::io::{stdin, Read};
+use std::num::ParseIntError;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use syntect::highlighting::{Theme, ThemeSet};
@@ -18,7 +19,7 @@ fn parse_str_color(s: &str) -> Result<Rgba<u8>, Error> {
 fn parse_font_str(s: &str) -> Vec<(String, f32)> {
     let mut result = vec![];
     for font in s.split(';') {
-        let tmp = font.split('=').collect::<Vec<&str>>();
+        let tmp = font.split('=').collect::<Vec<_>>();
         let font_name = tmp[0].to_owned();
         let font_size = tmp
             .get(1)
@@ -29,35 +30,67 @@ fn parse_font_str(s: &str) -> Vec<(String, f32)> {
     result
 }
 
+fn parse_line_range(s: &str) -> Result<Vec<u32>, ParseIntError> {
+    let mut result = vec![];
+    for range in s.split(';') {
+        let range: Vec<u32> = range
+            .split('-')
+            .map(|s| s.parse::<u32>())
+            .collect::<Result<Vec<_>, _>>()?;
+        if range.len() == 1 {
+            result.push(range[0])
+        } else {
+            for i in range[0]..range[1] {
+                result.push(i);
+            }
+        }
+    }
+    Ok(result)
+}
+
 #[derive(StructOpt, Debug)]
 #[structopt(name = "silicon", rename_all = "kebab")]
 pub struct Config {
-    /// The syntax highlight theme. It can be a theme name or path to a .tmTheme file.
-    #[structopt(long, default_value = "Dracula")]
-    pub theme: String,
+    /// Background color of the image
+    #[structopt(
+        long,
+        short,
+        value_name = "COLOR",
+        default_value = "#aaaaff",
+        parse(try_from_str = "parse_str_color")
+    )]
+    pub background: Rgba<u8>,
+
+    /// Read input from clipboard.
+    #[structopt(long)]
+    pub from_clipboard: bool,
+
+    /// File to read. If not set, stdin will be use.
+    #[structopt(value_name = "FILE", parse(from_os_str))]
+    pub file: Option<PathBuf>,
 
     /// The font list. eg. 'Hack; SimSun=31'
-    #[structopt(long, parse(from_str = "parse_font_str"))]
+    #[structopt(long, short, value_name = "FONT", parse(from_str = "parse_font_str"))]
     pub font: Option<Vec<(String, f32)>>,
 
+    /// Lines to high light. rg. '1-3; 4'
+    #[structopt(long, value_name = "LINES", parse(try_from_str = "parse_line_range"))]
+    pub highlight_lines: Option<Vec<u32>>,
+
+    /// The language for syntax highlighting. You can use full name ("Rust") or file extension ("rs").
+    #[structopt(short, value_name = "LANG", long)]
+    pub language: Option<String>,
+
     /// Pad between lines
-    #[structopt(long, default_value = "2")]
+    #[structopt(long, value_name = "PAD", default_value = "2")]
     pub line_pad: u32,
 
     /// List all themes.
     #[structopt(long)]
     pub list_themes: bool,
 
-    /// Read input from clipboard.
-    #[structopt(long)]
-    pub from_clipboard: bool,
-
-    // Copy the output image to clipboard.
-    #[structopt(short = "c", long)]
-    pub to_clipboard: bool,
-
     /// Write output image to specific location instead of cwd.
-    #[structopt(short = "o", long, value_name = "path")]
+    #[structopt(short, long, value_name = "PATH")]
     pub output: Option<PathBuf>,
 
     /// Hide the window controls.
@@ -68,54 +101,49 @@ pub struct Config {
     #[structopt(long)]
     pub no_line_number: bool,
 
-    /// Background color of the image
-    #[structopt(
-        long,
-        value_name = "color",
-        default_value = "#abb8c3",
-        parse(try_from_str = "parse_str_color")
-    )]
-    pub background: Rgba<u8>,
+    /// Don't round the corner
+    #[structopt(long)]
+    pub no_round_corner: bool,
+
+    /// Pad horiz
+    #[structopt(long, value_name = "PAD", default_value = "80")]
+    pub pad_horiz: u32,
+
+    /// Pad vert
+    #[structopt(long, value_name = "PAD", default_value = "100")]
+    pub pad_vert: u32,
 
     /// Color of shadow
     #[structopt(
         long,
-        value_name = "color",
+        value_name = "COLOR",
         default_value = "#555555",
         parse(try_from_str = "parse_str_color")
     )]
     pub shadow_color: Rgba<u8>,
 
     /// Blur radius of the shadow
-    #[structopt(long, value_name = "radius", default_value = "70.0")]
+    #[structopt(long, value_name = "R", default_value = "70.0")]
     pub shadow_blur_radius: f32,
 
-    /// Pad horiz
-    #[structopt(long, default_value = "80")]
-    pub pad_horiz: u32,
-
-    /// Pad vert
-    #[structopt(long, default_value = "100")]
-    pub pad_vert: u32,
-
     /// Shadow's offset in Y axis
-    #[structopt(long, value_name = "offset", default_value = "0")]
+    #[structopt(long, value_name = "Y", default_value = "0")]
     pub shadow_offset_y: i32,
 
     /// Shadow's offset in X axis
-    #[structopt(long, value_name = "offset", default_value = "0")]
+    #[structopt(long, value_name = "X", default_value = "0")]
     pub shadow_offset_x: i32,
 
-    /// The language for syntax highlighting. You can use full name ("Rust") or file extension ("rs").
-    #[structopt(short = "l", long)]
-    pub language: Option<String>,
+    /// The syntax highlight theme. It can be a theme name or path to a .tmTheme file.
+    #[structopt(long, value_name = "THEME", default_value = "Dracula")]
+    pub theme: String,
 
+    // Copy the output image to clipboard.
+    #[structopt(short = "c", long)]
+    pub to_clipboard: bool,
     // Draw a custom text on the bottom right corner
     // #[structopt(long)]
     // watermark: Option<String>,
-    /// File to read. If not set, stdin will be use.
-    #[structopt(value_name = "FILE", parse(from_os_str))]
-    pub file: Option<PathBuf>,
 }
 
 impl Config {
@@ -182,12 +210,10 @@ impl Config {
         // &ts.themes[&self.theme]
     }
 
-    pub fn no_window_controls(&self) -> bool {
-        self.no_window_controls
-    }
-
     pub fn get_formatter(&self) -> Result<ImageFormatter, Error> {
-        let mut formatter = ImageFormatterBuilder::new().line_pad(self.line_pad);
+        let mut formatter = ImageFormatterBuilder::new()
+            .line_pad(self.line_pad)
+            .highlight_lines(self.highlight_lines.clone().unwrap_or_else(|| vec![]));
         if let Some(fonts) = &self.font {
             formatter = formatter.font(fonts)?;
         }

@@ -1,7 +1,7 @@
 use crate::font::{FontCollection, FontStyle};
-use crate::utils::ToRgba;
+use crate::utils::{copy_alpha, ToRgba};
 use failure::Error;
-use image::{DynamicImage, Rgba, RgbaImage};
+use image::{DynamicImage, GenericImageView, Rgba, RgbaImage};
 use syntect::highlighting::{Color, Style, Theme};
 
 pub struct ImageFormatter {
@@ -26,6 +26,8 @@ pub struct ImageFormatter {
     /// font of english character, should be mono space font
     /// Default: Hack (builtin)
     font: FontCollection,
+    /// Highlight lines
+    highlight_lines: Vec<u32>,
 }
 
 pub struct ImageFormatterBuilder {
@@ -37,6 +39,8 @@ pub struct ImageFormatterBuilder {
     code_pad_top: u32,
     /// font of english character, should be mono space font
     font: FontCollection,
+    /// Highlight lines
+    highlight_lines: Vec<u32>,
 }
 
 impl<'a> ImageFormatterBuilder {
@@ -46,6 +50,7 @@ impl<'a> ImageFormatterBuilder {
             line_number: true,
             code_pad_top: 50,
             font: FontCollection::default(),
+            highlight_lines: vec![],
         }
     }
 
@@ -64,10 +69,16 @@ impl<'a> ImageFormatterBuilder {
         self
     }
 
+    // TODO: move this Result to `build`
     pub fn font<S: AsRef<str>>(mut self, fonts: &[(S, f32)]) -> Result<Self, Error> {
         let font = FontCollection::new(fonts)?;
         self.font = font;
         Ok(self)
+    }
+
+    pub fn highlight_lines(mut self, lines: Vec<u32>) -> Self {
+        self.highlight_lines = lines;
+        self
     }
 
     pub fn build(self) -> ImageFormatter {
@@ -79,6 +90,7 @@ impl<'a> ImageFormatterBuilder {
             line_number_pad: 6,
             line_number_chars: 0,
             font: self.font,
+            highlight_lines: self.highlight_lines,
         }
     }
 }
@@ -173,6 +185,23 @@ impl ImageFormatter {
         }
     }
 
+    fn highlight_lines(&self, image: &mut DynamicImage, lines: &[u32]) {
+        let width = image.width();
+        let height = self.font.get_font_height() + self.line_pad;
+        let mut color = image.get_pixel(20, 20);
+        color
+            .data
+            .iter_mut()
+            .for_each(|n| *n = (*n).saturating_add(20));
+
+        let shadow = RgbaImage::from_pixel(width, height, color);
+
+        for i in lines {
+            let y = self.get_line_y(*i - 1);
+            copy_alpha(&shadow, image, 0, y);
+        }
+    }
+
     // TODO: &mut ?
     pub fn format(&mut self, v: &[Vec<(Style, &str)>], theme: &Theme) -> DynamicImage {
         if self.line_number {
@@ -194,6 +223,9 @@ impl ImageFormatter {
 
         let mut image = DynamicImage::ImageRgba8(RgbaImage::from_pixel(size.0, size.1, background));
 
+        if !self.highlight_lines.is_empty() {
+            self.highlight_lines(&mut image, &self.highlight_lines);
+        }
         if self.line_number {
             self.draw_line_number(&mut image, drawables.max_lineno, foreground);
         }

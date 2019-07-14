@@ -47,11 +47,12 @@ fn run() -> Result<(), Error> {
 
     let mut image = formatter.format(&highlight, &theme);
 
-    if !config.no_window_controls() {
+    if !config.no_window_controls {
         add_window_controls(&mut image);
     }
-
-    round_corner(&mut image, 12);
+    if !config.no_round_corner {
+        round_corner(&mut image, 12);
+    }
 
     let image = config.get_shadow_adder().apply_to(&image);
 
