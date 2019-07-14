@@ -1,111 +1,102 @@
-use failure::Error;
-use font_kit::family_name::FamilyName;
-use font_kit::handle::Handle;
-use font_kit::properties::{Properties, Style, Weight};
-use font_kit::source::SystemSource;
-use syntect::highlighting::FontStyle;
-
 use conv::ValueInto;
 use euclid::{Point2D, Rect, Size2D};
+use failure::Error;
 use font_kit::canvas::{Canvas, Format, RasterizationOptions};
 use font_kit::font::Font;
 use font_kit::hinting::HintingOptions;
 use font_kit::loader::FontTransform;
+use font_kit::properties::{Properties, Style, Weight};
+use font_kit::source::SystemSource;
 use image::{GenericImage, Pixel};
 use imageproc::definitions::Clamp;
 use imageproc::pixelops::weighted_sum;
+use std::collections::HashMap;
 use std::sync::Arc;
+use syntect::highlighting;
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub enum FontStyle {
+    REGULAR,
+    ITALIC,
+    BOLD,
+    BOLDITALIC,
+}
+
+impl From<highlighting::FontStyle> for FontStyle {
+    fn from(style: highlighting::FontStyle) -> Self {
+        if style.contains(highlighting::FontStyle::BOLD) {
+            if style.contains(highlighting::FontStyle::ITALIC) {
+                BOLDITALIC
+            } else {
+                BOLD
+            }
+        } else if style.contains(highlighting::FontStyle::ITALIC) {
+            ITALIC
+        } else {
+            REGULAR
+        }
+    }
+}
+
+use FontStyle::*;
 
 #[derive(Debug)]
 pub struct ImageFont {
-    pub regular: Font,
-    pub italic: Font,
-    pub bold: Font,
-    pub bolditalic: Font,
+    pub fonts: HashMap<FontStyle, Font>,
     pub size: f32,
 }
 
 impl ImageFont {
-    pub fn new(font: &str, size: f32) -> Result<Self, Error> {
-        let regular = Self::search_font(font, &Properties::new())?;
-        let regular = regular.load()?;
+    pub fn new(name: &str, size: f32) -> Result<Self, Error> {
+        let mut fonts = HashMap::new();
 
-        debug!("regular: {:?}", regular);
+        let family = SystemSource::new().select_family_by_name(name)?;
+        let handles = family.fonts();
 
-        if !regular.is_monospace() {
-            eprintln!("[warning] You're using a non-monospace font");
+        debug!("{:?}", handles);
+
+        for handle in handles {
+            let font = handle.load()?;
+
+            let properties: Properties = font.properties();
+
+            debug!("{:?} - {:?}", font, properties);
+
+            // cannot use match because `Weight` didn't derive `Eq`
+            match properties.style {
+                Style::Normal => {
+                    if properties.weight == Weight::NORMAL {
+                        fonts.insert(REGULAR, font);
+                    } else if properties.weight == Weight::BOLD {
+                        fonts.insert(BOLD, font);
+                    }
+                }
+                Style::Italic => {
+                    if properties.weight == Weight::NORMAL {
+                        fonts.insert(ITALIC, font);
+                    } else if properties.weight == Weight::BOLD {
+                        fonts.insert(BOLDITALIC, font);
+                    }
+                }
+                _ => (),
+            }
         }
 
-        let italic = Self::search_font(font, &Properties::new().style(Style::Italic))?;
-        let italic = italic.load()?;
-
-        debug!("italic: {:?}", italic);
-
-        let bold = Self::search_font(font, &Properties::new().weight(Weight::BOLD))?;
-        let bold = bold.load()?;
-
-        debug!("bold: {:?}", bold);
-
-        let bolditalic = Self::search_font(
-            font,
-            &Properties::new().style(Style::Italic).weight(Weight::BOLD),
-        )?;
-        let bolditalic = bolditalic.load()?;
-
-        debug!("bolditalic: {:?}", bolditalic);
-
-        Ok(Self {
-            regular,
-            italic,
-            bold,
-            bolditalic,
-            size,
-        })
+        Ok(Self { fonts, size })
     }
 
-    pub fn get_by_style(&self, style: &syntect::highlighting::Style) -> &Font {
-        if style.font_style.contains(FontStyle::BOLD) {
-            if style.font_style.contains(FontStyle::ITALIC) {
-                &self.bolditalic
-            } else {
-                &self.bold
-            }
-        } else if style.font_style.contains(FontStyle::ITALIC) {
-            &self.italic
-        } else {
-            &self.regular
-        }
+    pub fn get_by_style(&self, style: FontStyle) -> &Font {
+        self.fonts
+            .get(&style)
+            .unwrap_or_else(|| self.fonts.get(&REGULAR).unwrap())
+    }
+
+    pub fn get_reaular(&self) -> &Font {
+        self.fonts.get(&REGULAR).unwrap()
     }
 
     pub fn set_size(&mut self, size: f32) {
         self.size = size;
-    }
-
-    /// search a font by it's family name and properties
-    fn search_font(family_name: &str, properties: &Properties) -> Result<Handle, Error> {
-        let family_names = [FamilyName::Title(family_name.to_owned())];
-        Ok(SystemSource::new().select_best_match(&family_names, properties)?)
-    }
-
-    pub fn from_bytes(
-        regular: Vec<u8>,
-        italic: Vec<u8>,
-        bold: Vec<u8>,
-        bolditalic: Vec<u8>,
-        size: f32,
-    ) -> Result<Self, Error> {
-        let regular = Font::from_bytes(Arc::new(regular), 0)?;
-        let italic = Font::from_bytes(Arc::new(italic), 0)?;
-        let bold = Font::from_bytes(Arc::new(bold), 0)?;
-        let bolditalic = Font::from_bytes(Arc::new(bolditalic), 0)?;
-
-        Ok(Self {
-            regular,
-            bolditalic,
-            italic,
-            bold,
-            size,
-        })
     }
 
     /// get the (width, height) of font
@@ -115,10 +106,10 @@ impl ImageFont {
 
     /// get the (width, height) of a char
     pub fn get_char_size(&self, c: char) -> (u32, u32) {
-        let metrics = self.regular.metrics();
+        let metrics = self.get_reaular().metrics();
         let advance = self
-            .regular
-            .advance(self.regular.glyph_for_char(c).unwrap())
+            .get_reaular()
+            .advance(self.get_reaular().glyph_for_char(c).unwrap())
             .unwrap();
 
         let width = (advance / metrics.units_per_em as f32 * self.size).x.ceil() as u32;
@@ -127,9 +118,35 @@ impl ImageFont {
 
         (width, height)
     }
+}
 
-    pub fn get_scale(&self) -> f32 {
-        self.size
+impl Default for ImageFont {
+    fn default() -> Self {
+        let l = vec![
+            (
+                REGULAR,
+                include_bytes!("../assets/fonts/Hack-Regular.ttf").to_vec(),
+            ),
+            (
+                ITALIC,
+                include_bytes!("../assets/fonts/Hack-Italic.ttf").to_vec(),
+            ),
+            (
+                BOLD,
+                include_bytes!("../assets/fonts/Hack-Bold.ttf").to_vec(),
+            ),
+            (
+                BOLDITALIC,
+                include_bytes!("../assets/fonts/Hack-BoldItalic.ttf").to_vec(),
+            ),
+        ];
+        let mut fonts = HashMap::new();
+        for (style, bytes) in l {
+            let font = Font::from_bytes(Arc::new(bytes), 0).unwrap();
+            fonts.insert(style, font);
+        }
+
+        Self { fonts, size: 26.0 }
     }
 }
 
