@@ -30,7 +30,7 @@ pub struct ImageFormatter {
     highlight_lines: Vec<u32>,
 }
 
-pub struct ImageFormatterBuilder {
+pub struct ImageFormatterBuilder<'a, S: AsRef<str>> {
     /// pad between lines
     line_pad: u32,
     /// show line number
@@ -38,18 +38,18 @@ pub struct ImageFormatterBuilder {
     /// pad of top of the code area
     code_pad_top: u32,
     /// font of english character, should be mono space font
-    font: FontCollection,
+    font: &'a [(S, f32)],
     /// Highlight lines
     highlight_lines: Vec<u32>,
 }
 
-impl<'a> ImageFormatterBuilder {
+impl<'a, S: AsRef<str>> ImageFormatterBuilder<'a, S> {
     pub fn new() -> Self {
         Self {
             line_pad: 2,
             line_number: true,
             code_pad_top: 50,
-            font: FontCollection::default(),
+            font: &[],
             highlight_lines: vec![],
         }
     }
@@ -69,11 +69,9 @@ impl<'a> ImageFormatterBuilder {
         self
     }
 
-    // TODO: move this Result to `build`
-    pub fn font<S: AsRef<str>>(mut self, fonts: &[(S, f32)]) -> Result<Self, Error> {
-        let font = FontCollection::new(fonts)?;
-        self.font = font;
-        Ok(self)
+    pub fn font(mut self, fonts: &'a [(S, f32)]) -> Self {
+        self.font = fonts;
+        self
     }
 
     pub fn highlight_lines(mut self, lines: Vec<u32>) -> Self {
@@ -81,17 +79,22 @@ impl<'a> ImageFormatterBuilder {
         self
     }
 
-    pub fn build(self) -> ImageFormatter {
-        ImageFormatter {
+    pub fn build(self) -> Result<ImageFormatter, Error> {
+        let font = if self.font.is_empty() {
+            FontCollection::default()
+        } else {
+            FontCollection::new(self.font)?
+        };
+        Ok(ImageFormatter {
             line_pad: self.line_pad,
             code_pad: 25,
             code_pad_top: self.code_pad_top,
             line_number: self.line_number,
             line_number_pad: 6,
             line_number_chars: 0,
-            font: self.font,
             highlight_lines: self.highlight_lines,
-        }
+            font
+        })
     }
 }
 

@@ -164,7 +164,6 @@ impl Config {
             } else {
                 ps.find_syntax_by_first_line(&code)
                     .ok_or_else(|| format_err!("Failed to detect the language"))?
-                // TODO: else ?
             };
             return Ok((language, code));
         }
@@ -195,7 +194,6 @@ impl Config {
         } else {
             ps.find_syntax_by_first_line(&s)
                 .ok_or_else(|| format_err!("Failed to detect the language"))?
-            // TODO: else ?
         };
 
         Ok((language, s))
@@ -215,7 +213,7 @@ impl Config {
             .line_pad(self.line_pad)
             .highlight_lines(self.highlight_lines.clone().unwrap_or_else(|| vec![]));
         if let Some(fonts) = &self.font {
-            formatter = formatter.font(fonts)?;
+            formatter = formatter.font(fonts);
         }
         if self.no_line_number {
             formatter = formatter.line_number(false);
@@ -224,7 +222,7 @@ impl Config {
             formatter = formatter.code_pad_top(0);
         }
 
-        Ok(formatter.build())
+        Ok(formatter.build()?)
     }
 
     pub fn get_shadow_adder(&self) -> ShadowAdder {
