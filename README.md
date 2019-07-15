@@ -7,7 +7,7 @@ Silicon is an alternative to [Carbon](https://github.com/dawnlabs/carbon) implem
 
 It can render your source code into a beautiful image.
 
-<img width="66%" src="http://storage.aloxaf.cn/silicon.png?">
+<img width="66%" src="http://storage.aloxaf.cn/silicon.png?v=1">
 
 ## Why Silicon
 
@@ -64,6 +64,12 @@ Highlight specified line
 
 ```
 silicon main.rs -o main.png --highlight-lines '1; 3-4'
+```
+
+Custom the image
+
+```
+silicon ./target/test.rs -o test.png --shadow-color '#555555' --background '#ffffff' --shadow-blur-radius 30 --no-window-controls
 ```
 
 see `silicon --help` for detail

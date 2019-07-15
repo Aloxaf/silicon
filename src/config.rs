@@ -90,7 +90,7 @@ pub struct Config {
     pub list_themes: bool,
 
     /// Write output image to specific location instead of cwd.
-    #[structopt(short, long, value_name = "PATH")]
+    #[structopt(short, long, value_name = "PATH", required_unless = "list-themes")]
     pub output: Option<PathBuf>,
 
     /// Hide the window controls.
@@ -122,8 +122,8 @@ pub struct Config {
     )]
     pub shadow_color: Rgba<u8>,
 
-    /// Blur radius of the shadow
-    #[structopt(long, value_name = "R", default_value = "70.0")]
+    /// Blur radius of the shadow. (set it to 0 to hide shadow)
+    #[structopt(long, value_name = "R", default_value = "0")]
     pub shadow_blur_radius: f32,
 
     /// Shadow's offset in Y axis
@@ -164,7 +164,6 @@ impl Config {
             } else {
                 ps.find_syntax_by_first_line(&code)
                     .ok_or_else(|| format_err!("Failed to detect the language"))?
-                // TODO: else ?
             };
             return Ok((language, code));
         }
@@ -195,7 +194,6 @@ impl Config {
         } else {
             ps.find_syntax_by_first_line(&s)
                 .ok_or_else(|| format_err!("Failed to detect the language"))?
-            // TODO: else ?
         };
 
         Ok((language, s))
@@ -215,7 +213,7 @@ impl Config {
             .line_pad(self.line_pad)
             .highlight_lines(self.highlight_lines.clone().unwrap_or_else(|| vec![]));
         if let Some(fonts) = &self.font {
-            formatter = formatter.font(fonts)?;
+            formatter = formatter.font(fonts);
         }
         if self.no_line_number {
             formatter = formatter.line_number(false);
@@ -224,7 +222,7 @@ impl Config {
             formatter = formatter.code_pad_top(0);
         }
 
-        Ok(formatter.build())
+        Ok(formatter.build()?)
     }
 
     pub fn get_shadow_adder(&self) -> ShadowAdder {
