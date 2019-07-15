@@ -122,8 +122,8 @@ pub struct Config {
     )]
     pub shadow_color: Rgba<u8>,
 
-    /// Blur radius of the shadow
-    #[structopt(long, value_name = "R", default_value = "70.0")]
+    /// Blur radius of the shadow. (set it to 0 to hide shadow)
+    #[structopt(long, value_name = "R", default_value = "0")]
     pub shadow_blur_radius: f32,
 
     /// Shadow's offset in Y axis
