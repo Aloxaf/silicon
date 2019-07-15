@@ -93,7 +93,7 @@ impl<'a, S: AsRef<str>> ImageFormatterBuilder<'a, S> {
             line_number_pad: 6,
             line_number_chars: 0,
             highlight_lines: self.highlight_lines,
-            font
+            font,
         })
     }
 }
