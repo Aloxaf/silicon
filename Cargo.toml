@@ -31,5 +31,8 @@ version = "0.6.2"
 default-features = false
 features = [ "termcolor", "atty", "humantime" ]
 
+[patch.crates-io]
+font-kit = { version = "0.3.1", git = "https://github.com/pcwalton/font-kit" }
+
 [profile.release]
 lto = true

@@ -5,6 +5,8 @@
 
 Silicon is an alternative to [Carbon](https://github.com/dawnlabs/carbon) implemented in Rust.
 
+It can render your source code into a beautiful image.
+
 <img width="66%" src="http://storage.aloxaf.cn/silicon.png?">
 
 ## Why Silicon
@@ -28,6 +30,12 @@ It's not as beautiful as Carbon...
 
 ```
 cargo install silicon
+```
+
+Or the git version (Currently only the git version can work well on Windows)
+
+```
+cargo install --git https://github.com/Aloxaf/silicon --branch dev
 ```
 
 `xclip` is required on Linux for clipboard support.
