@@ -281,5 +281,7 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
 
 #[cfg(not(target_os = "linux"))]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
-    Err(format_err!("This feature hasn't been implemented in your system"))
+    Err(format_err!(
+        "This feature hasn't been implemented in your system"
+    ))
 }
