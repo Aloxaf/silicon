@@ -1,10 +1,12 @@
 use failure::Error;
 use image::imageops::{crop, resize};
+use image::Pixel;
 use image::{DynamicImage, FilterType, GenericImage, GenericImageView, Rgba, RgbaImage};
-use image::{ImageOutputFormat, Pixel};
 use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut};
 use imageproc::rect::Rect;
-use std::process::Command;
+
+#[cfg(target_os = "linux")]
+use {image::ImageOutputFormat, std::process::Command};
 
 pub trait ToRgba {
     type Target;
@@ -280,8 +282,8 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
 }
 
 #[cfg(not(target_os = "linux"))]
-pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
+pub fn dump_image_to_clipboard(_image: &DynamicImage) -> Result<(), Error> {
     Err(format_err!(
-        "This feature hasn't been implemented in your system"
+        "This feature hasn't been implemented for your system"
     ))
 }
