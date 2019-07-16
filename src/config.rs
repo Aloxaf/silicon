@@ -90,7 +90,12 @@ pub struct Config {
     pub list_themes: bool,
 
     /// Write output image to specific location instead of cwd.
-    #[structopt(short, long, value_name = "PATH", required_unless = "list-themes")]
+    #[structopt(
+        short,
+        long,
+        value_name = "PATH",
+        raw(required_unless_one = r#"&["list-themes", "to-clipboard"]"#)
+    )]
     pub output: Option<PathBuf>,
 
     /// Hide the window controls.
