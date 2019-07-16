@@ -174,7 +174,10 @@ impl ImageFormatter {
         }
     }
 
-    fn draw_line_number(&self, image: &mut DynamicImage, lineno: u32, color: Rgba<u8>) {
+    fn draw_line_number(&self, image: &mut DynamicImage, lineno: u32, mut color: Rgba<u8>) {
+        for i in color.data.iter_mut() {
+            *i = (*i).saturating_sub(20);
+        }
         for i in 0..=lineno {
             let line_mumber = format!("{:>width$}", i + 1, width = self.line_number_chars as usize);
             self.font.draw_text_mut(
@@ -192,10 +195,10 @@ impl ImageFormatter {
         let width = image.width();
         let height = self.font.get_font_height() + self.line_pad;
         let mut color = image.get_pixel(20, 20);
-        color
-            .data
-            .iter_mut()
-            .for_each(|n| *n = (*n).saturating_add(20));
+
+        for i in color.data.iter_mut() {
+            *i = (*i).saturating_add(40);
+        }
 
         let shadow = RgbaImage::from_pixel(width, height, color);
 
