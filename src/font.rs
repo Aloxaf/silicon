@@ -1,3 +1,16 @@
+//! A basic font manager with fallback support
+//!
+//! # Example
+//!
+//! ```rust
+//! use image::{RgbImage, Rgb};
+//! use silicon::font::{FontCollection, FontStyle};
+//!
+//! let mut image = RgbImage::new(100, 100);
+//! let font = FontCollection::new(&[("Hack", 27.0), ("FiraCode", 27.0)]).unwrap();
+//!
+//! font.draw_text_mut(&mut image, Rgb([255, 0, 0]), 0, 0, FontStyle::REGULAR, "Hello, world");
+//! ```
 use conv::ValueInto;
 use euclid::{Point2D, Rect};
 use failure::Error;
@@ -14,6 +27,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use syntect::highlighting;
 
+/// Font style
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum FontStyle {
     REGULAR,
@@ -132,7 +146,7 @@ impl ImageFont {
         self.fonts.get(&REGULAR).unwrap()
     }
 
-    /// get the height of the font
+    /// Get the height of the font
     pub fn get_font_height(&self) -> u32 {
         let font = self.get_reaular();
         let metrics = font.metrics();
@@ -218,12 +232,14 @@ impl FontCollection {
         (glyphs, delta_x)
     }
 
+    /// Get the width of the given glyph
     fn get_glyph_width(font: &Font, id: u32, size: f32) -> u32 {
         let metrics = font.metrics();
         let advance = font.advance(id).unwrap();
         (advance / metrics.units_per_em as f32 * size).x.ceil() as u32
     }
 
+    /// Get the width of the given text
     pub fn get_text_len(&self, text: &str) -> u32 {
         self.layout(text, REGULAR).1
     }

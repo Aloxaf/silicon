@@ -21,6 +21,14 @@ conv = "0.3.3"
 euclid = "0.19"
 log = "0.4.7"
 
+[lib]
+name = "silicon"
+path = "src/lib.rs"
+
+[[bin]]
+name = "silicon"
+path = "src/bin.rs"
+
 [dependencies.structopt]
 version = "0.2"
 default-features = false

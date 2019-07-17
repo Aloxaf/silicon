@@ -66,6 +66,7 @@ pub fn add_window_controls(image: &mut DynamicImage) {
     copy_alpha(&title_bar, image.as_mut_rgba8().unwrap(), 15, 15);
 }
 
+/// Add the shadow for image
 #[derive(Debug)]
 pub struct ShadowAdder {
     background: Rgba<u8>,
@@ -90,21 +91,25 @@ impl ShadowAdder {
         }
     }
 
+    /// Set the background color
     pub fn background(mut self, color: Rgba<u8>) -> Self {
         self.background = color;
         self
     }
 
+    /// Set the shadow color
     pub fn shadow_color(mut self, color: Rgba<u8>) -> Self {
         self.shadow_color = color;
         self
     }
 
+    /// Set the shadow size
     pub fn blur_radius(mut self, sigma: f32) -> Self {
         self.blur_radius = sigma;
         self
     }
 
+    ///
     pub fn pad_horiz(mut self, pad: u32) -> Self {
         self.pad_horiz = pad;
         self
@@ -160,7 +165,7 @@ impl ShadowAdder {
 }
 
 /// copy from src to dst, taking into account alpha channels
-pub fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
+pub(crate) fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
     assert!(src.width() + x <= dst.width());
     assert!(src.height() + y <= dst.height());
     for j in 0..src.height() {
@@ -179,7 +184,7 @@ pub fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
     }
 }
 
-/// round the corner of an image
+/// Round the corner of the image
 pub fn round_corner(image: &mut DynamicImage, radius: u32) {
     // draw a circle with given foreground on given background
     // then split it into four pieces and paste them to the four corner of the image
@@ -217,7 +222,7 @@ pub fn round_corner(image: &mut DynamicImage, radius: u32) {
 // issue: https://github.com/image-rs/imageproc/issues/328
 // PR: https://github.com/image-rs/imageproc/pull/330
 /// Draw as much of a circle, including its contents, as lies inside the image bounds.
-pub fn draw_filled_circle_mut<I>(image: &mut I, center: (i32, i32), radius: i32, color: I::Pixel)
+pub(crate) fn draw_filled_circle_mut<I>(image: &mut I, center: (i32, i32), radius: i32, color: I::Pixel)
 where
     I: GenericImage,
     I::Pixel: 'static,

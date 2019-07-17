@@ -214,18 +214,12 @@ impl Config {
     }
 
     pub fn get_formatter(&self) -> Result<ImageFormatter, Error> {
-        let mut formatter = ImageFormatterBuilder::new()
+        let formatter = ImageFormatterBuilder::new()
             .line_pad(self.line_pad)
+            .window_controls(!self.no_window_controls)
+            .line_number(!self.no_line_number)
+            .font(self.font.clone().unwrap_or_else(|| vec![]))
             .highlight_lines(self.highlight_lines.clone().unwrap_or_else(|| vec![]));
-        if let Some(fonts) = &self.font {
-            formatter = formatter.font(fonts);
-        }
-        if self.no_line_number {
-            formatter = formatter.line_number(false);
-        }
-        if self.no_window_controls {
-            formatter = formatter.code_pad_top(0);
-        }
 
         Ok(formatter.build()?)
     }

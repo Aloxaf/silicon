@@ -1,3 +1,4 @@
+//! Format the output of syntect into an image
 use crate::font::{FontCollection, FontStyle};
 use crate::utils::{copy_alpha, ToRgba};
 use failure::Error;
@@ -8,7 +9,7 @@ pub struct ImageFormatter {
     /// pad between lines
     /// Default: 2
     line_pad: u32,
-    /// pad between code and edge of code area. [top, bottom, left, right]
+    /// pad between code and edge of code area.
     /// Default: 25
     code_pad: u32,
     /// pad of top of the code area
@@ -30,50 +31,55 @@ pub struct ImageFormatter {
     highlight_lines: Vec<u32>,
 }
 
-pub struct ImageFormatterBuilder<'a, S: AsRef<str>> {
-    /// pad between lines
+pub struct ImageFormatterBuilder<S: AsRef<str>> {
+    /// Pad between lines
     line_pad: u32,
-    /// show line number
+    /// Show line number
     line_number: bool,
-    /// pad of top of the code area
-    code_pad_top: u32,
-    /// font of english character, should be mono space font
-    font: &'a [(S, f32)],
+    /// Font of english character, should be mono space font
+    font: Vec<(S, f32)>,
     /// Highlight lines
     highlight_lines: Vec<u32>,
+    /// Whether show the window controls
+    window_controls: bool,
 }
 
-impl<'a, S: AsRef<str>> ImageFormatterBuilder<'a, S> {
+impl<S: AsRef<str>> ImageFormatterBuilder<S> {
     pub fn new() -> Self {
         Self {
             line_pad: 2,
             line_number: true,
-            code_pad_top: 50,
-            font: &[],
+            font: vec![],
             highlight_lines: vec![],
+            window_controls: true,
         }
     }
 
+    /// Whether show the line number
     pub fn line_number(mut self, show: bool) -> Self {
         self.line_number = show;
         self
     }
 
+    /// Set the pad between lines
     pub fn line_pad(mut self, pad: u32) -> Self {
         self.line_pad = pad;
         self
     }
 
-    pub fn code_pad_top(mut self, pad: u32) -> Self {
-        self.code_pad_top = pad;
-        self
-    }
-
-    pub fn font(mut self, fonts: &'a [(S, f32)]) -> Self {
+    /// Set the font
+    pub fn font(mut self, fonts: Vec<(S, f32)>) -> Self {
         self.font = fonts;
         self
     }
 
+    /// Whether show the windows controls
+    pub fn window_controls(mut self, show: bool) -> Self {
+        self.window_controls = show;
+        self
+    }
+
+    /// Set the lines to highlight.
     pub fn highlight_lines(mut self, lines: Vec<u32>) -> Self {
         self.highlight_lines = lines;
         self
@@ -83,16 +89,23 @@ impl<'a, S: AsRef<str>> ImageFormatterBuilder<'a, S> {
         let font = if self.font.is_empty() {
             FontCollection::default()
         } else {
-            FontCollection::new(self.font)?
+            FontCollection::new(&self.font)?
         };
+
+        let code_pad_top = if self.window_controls {
+            50
+        } else {
+            0
+        };
+
         Ok(ImageFormatter {
             line_pad: self.line_pad,
             code_pad: 25,
-            code_pad_top: self.code_pad_top,
             line_number: self.line_number,
             line_number_pad: 6,
             line_number_chars: 0,
             highlight_lines: self.highlight_lines,
+            code_pad_top,
             font,
         })
     }
