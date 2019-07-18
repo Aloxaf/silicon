@@ -92,11 +92,7 @@ impl<S: AsRef<str>> ImageFormatterBuilder<S> {
             FontCollection::new(&self.font)?
         };
 
-        let code_pad_top = if self.window_controls {
-            50
-        } else {
-            0
-        };
+        let code_pad_top = if self.window_controls { 50 } else { 0 };
 
         Ok(ImageFormatter {
             line_pad: self.line_pad,

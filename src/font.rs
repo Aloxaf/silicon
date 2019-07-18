@@ -54,6 +54,7 @@ impl From<highlighting::FontStyle> for FontStyle {
 
 use FontStyle::*;
 
+/// A single font with specific size
 #[derive(Debug)]
 pub struct ImageFont {
     pub fonts: HashMap<FontStyle, Font>,
@@ -61,6 +62,7 @@ pub struct ImageFont {
 }
 
 impl Default for ImageFont {
+    /// It will use Hack font (size: 26.0) by default
     fn default() -> Self {
         let l = vec![
             (
@@ -136,12 +138,14 @@ impl ImageFont {
         Ok(Self { fonts, size })
     }
 
+    /// Get a font by style. If there is no such a font, it will return the REGULAR font.
     pub fn get_by_style(&self, style: FontStyle) -> &Font {
         self.fonts
             .get(&style)
             .unwrap_or_else(|| self.fonts.get(&REGULAR).unwrap())
     }
 
+    /// Get the regular font
     pub fn get_reaular(&self) -> &Font {
         self.fonts.get(&REGULAR).unwrap()
     }
@@ -154,6 +158,9 @@ impl ImageFont {
     }
 }
 
+/// A collection of font
+///
+/// It can be used to draw text on the image.
 #[derive(Debug)]
 pub struct FontCollection(Vec<ImageFont>);
 
@@ -164,6 +171,7 @@ impl Default for FontCollection {
 }
 
 impl FontCollection {
+    /// Create a FontCollection with several fonts.
     pub fn new<S: AsRef<str>>(font_list: &[(S, f32)]) -> Result<Self, Error> {
         let mut fonts = vec![];
         for (name, size) in font_list {

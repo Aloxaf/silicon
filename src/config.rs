@@ -206,11 +206,10 @@ impl Config {
 
     pub fn theme(&self, ts: &ThemeSet) -> Result<Theme, Error> {
         if let Some(theme) = ts.themes.get(&self.theme) {
-            return Ok(theme.clone());
+            Ok(theme.clone())
         } else {
-            return Ok(ThemeSet::get_theme(&self.theme)?);
+            Ok(ThemeSet::get_theme(&self.theme)?)
         }
-        // &ts.themes[&self.theme]
     }
 
     pub fn get_formatter(&self) -> Result<ImageFormatter, Error> {

@@ -4,11 +4,22 @@ use image::Pixel;
 use image::{DynamicImage, FilterType, GenericImage, GenericImageView, Rgba, RgbaImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut};
 use imageproc::rect::Rect;
+use syntect::dumps;
+use syntect::highlighting::ThemeSet;
+use syntect::parsing::SyntaxSet;
 
 #[cfg(target_os = "linux")]
 use {image::ImageOutputFormat, std::process::Command};
 
-pub trait ToRgba {
+/// Load the default SyntaxSet and ThemeSet.
+pub fn init_syntect() -> (SyntaxSet, ThemeSet) {
+    (
+        dumps::from_binary(include_bytes!("../assets/syntaxes.bin")),
+        dumps::from_binary(include_bytes!("../assets/themes.bin")),
+    )
+}
+
+pub(crate) trait ToRgba {
     type Target;
     fn to_rgba(&self) -> Self::Target;
 }
@@ -33,6 +44,7 @@ impl ToRgba for syntect::highlighting::Color {
     }
 }
 
+/// Add the window controls for image
 pub fn add_window_controls(image: &mut DynamicImage) {
     let color = [
         ("#FF5F56", "#E0443E"),
@@ -109,7 +121,6 @@ impl ShadowAdder {
         self
     }
 
-    ///
     pub fn pad_horiz(mut self, pad: u32) -> Self {
         self.pad_horiz = pad;
         self
@@ -222,8 +233,12 @@ pub fn round_corner(image: &mut DynamicImage, radius: u32) {
 // issue: https://github.com/image-rs/imageproc/issues/328
 // PR: https://github.com/image-rs/imageproc/pull/330
 /// Draw as much of a circle, including its contents, as lies inside the image bounds.
-pub(crate) fn draw_filled_circle_mut<I>(image: &mut I, center: (i32, i32), radius: i32, color: I::Pixel)
-where
+pub(crate) fn draw_filled_circle_mut<I>(
+    image: &mut I,
+    center: (i32, i32),
+    radius: i32,
+    color: I::Pixel,
+) where
     I: GenericImage,
     I::Pixel: 'static,
 {

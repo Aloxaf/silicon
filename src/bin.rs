@@ -4,13 +4,10 @@ extern crate log;
 extern crate failure;
 
 use crate::config::Config;
-use crate::utils::{add_window_controls, dump_image_to_clipboard, round_corner};
+use crate::utils::*;
 use failure::Error;
 use structopt::StructOpt;
-use syntect::dumps;
 use syntect::easy::HighlightLines;
-use syntect::highlighting::ThemeSet;
-use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
 mod blur;
@@ -22,8 +19,7 @@ mod utils;
 fn run() -> Result<(), Error> {
     let config: Config = Config::from_args();
 
-    let ps = dumps::from_binary::<SyntaxSet>(include_bytes!("../assets/syntaxes.bin")); //SyntaxSet::load_defaults_newlines();
-    let ts = dumps::from_binary::<ThemeSet>(include_bytes!("../assets/themes.bin")); // ThemeSet::load();
+    let (ps, ts) = init_syntect();
 
     if config.list_themes {
         for i in ts.themes.keys() {
