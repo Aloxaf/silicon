@@ -1,7 +1,7 @@
 //! Format the output of syntect into an image
+use crate::error::FontError;
 use crate::font::{FontCollection, FontStyle};
 use crate::utils::*;
-use failure::Error;
 use image::{DynamicImage, GenericImageView, Rgba, RgbaImage};
 use syntect::highlighting::{Color, Style, Theme};
 
@@ -108,7 +108,7 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
         self
     }
 
-    pub fn build(self) -> Result<ImageFormatter, Error> {
+    pub fn build(self) -> Result<ImageFormatter, FontError> {
         let font = if self.font.is_empty() {
             FontCollection::default()
         } else {

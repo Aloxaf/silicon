@@ -1,4 +1,3 @@
-use failure::Error;
 use image::imageops::{crop, resize};
 use image::Pixel;
 use image::{DynamicImage, FilterType, GenericImage, GenericImageView, Rgba, RgbaImage};
@@ -7,9 +6,6 @@ use imageproc::rect::Rect;
 use syntect::dumps;
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
-
-#[cfg(target_os = "linux")]
-use {image::ImageOutputFormat, std::process::Command};
 
 /// Load the default SyntaxSet and ThemeSet.
 pub fn init_syntect() -> (SyntaxSet, ThemeSet) {
@@ -288,28 +284,4 @@ pub(crate) fn draw_filled_circle_mut<I>(
             p += 2 * (x - y) + 1;
         }
     }
-}
-
-#[cfg(target_os = "linux")]
-pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
-    let mut temp = tempfile::NamedTempFile::new()?;
-    image.write_to(&mut temp, ImageOutputFormat::PNG)?;
-    Command::new("xclip")
-        .args(&[
-            "-sel",
-            "clip",
-            "-t",
-            "image/png",
-            temp.path().to_str().unwrap(),
-        ])
-        .status()
-        .map_err(|e| format_err!("Failed to copy image to clipboard: {}", e))?;
-    Ok(())
-}
-
-#[cfg(not(target_os = "linux"))]
-pub fn dump_image_to_clipboard(_image: &DynamicImage) -> Result<(), Error> {
-    Err(format_err!(
-        "This feature hasn't been implemented for your system"
-    ))
 }

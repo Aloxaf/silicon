@@ -11,9 +11,9 @@
 //!
 //! font.draw_text_mut(&mut image, Rgb([255, 0, 0]), 0, 0, FontStyle::REGULAR, "Hello, world");
 //! ```
+use crate::error::FontError;
 use conv::ValueInto;
 use euclid::{Point2D, Rect};
-use failure::Error;
 use font_kit::canvas::{Canvas, Format, RasterizationOptions};
 use font_kit::font::Font;
 use font_kit::hinting::HintingOptions;
@@ -93,7 +93,7 @@ impl Default for ImageFont {
 }
 
 impl ImageFont {
-    pub fn new(name: &str, size: f32) -> Result<Self, Error> {
+    pub fn new(name: &str, size: f32) -> Result<Self, FontError> {
         // Silicon already contains Hack font
         if name == "Hack" {
             let mut font = Self::default();
@@ -172,7 +172,7 @@ impl Default for FontCollection {
 
 impl FontCollection {
     /// Create a FontCollection with several fonts.
-    pub fn new<S: AsRef<str>>(font_list: &[(S, f32)]) -> Result<Self, Error> {
+    pub fn new<S: AsRef<str>>(font_list: &[(S, f32)]) -> Result<Self, FontError> {
         let mut fonts = vec![];
         for (name, size) in font_list {
             let name = name.as_ref();
