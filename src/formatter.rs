@@ -1,6 +1,6 @@
 //! Format the output of syntect into an image
 use crate::font::{FontCollection, FontStyle};
-use crate::utils::{copy_alpha, ToRgba};
+use crate::utils::*;
 use failure::Error;
 use image::{DynamicImage, GenericImageView, Rgba, RgbaImage};
 use syntect::highlighting::{Color, Style, Theme};
@@ -18,6 +18,9 @@ pub struct ImageFormatter {
     /// show line number
     /// Default: true
     line_number: bool,
+    /// round corner
+    /// Default: true
+    round_corner: bool,
     /// pad between code and line number
     /// Default: 6
     line_number_pad: u32,
@@ -29,9 +32,12 @@ pub struct ImageFormatter {
     font: FontCollection,
     /// Highlight lines
     highlight_lines: Vec<u32>,
+    /// Shadow adder
+    shadow_adder: Option<ShadowAdder>,
 }
 
-pub struct ImageFormatterBuilder<S: AsRef<str>> {
+#[derive(Default)]
+pub struct ImageFormatterBuilder<S> {
     /// Pad between lines
     line_pad: u32,
     /// Show line number
@@ -42,16 +48,21 @@ pub struct ImageFormatterBuilder<S: AsRef<str>> {
     highlight_lines: Vec<u32>,
     /// Whether show the window controls
     window_controls: bool,
+    /// Whether round the corner of the image
+    round_corner: bool,
+    /// Shadow adder,
+    shadow_adder: Option<ShadowAdder>,
 }
 
-impl<S: AsRef<str>> ImageFormatterBuilder<S> {
+// FXIME: cannot use `ImageFormatterBuilder::new().build()` bacuse cannot infer type for `S`
+impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
     pub fn new() -> Self {
         Self {
             line_pad: 2,
             line_number: true,
-            font: vec![],
-            highlight_lines: vec![],
             window_controls: true,
+            round_corner: true,
+            ..Default::default()
         }
     }
 
@@ -79,6 +90,18 @@ impl<S: AsRef<str>> ImageFormatterBuilder<S> {
         self
     }
 
+    /// Whether round the corner
+    pub fn round_corner(mut self, b: bool) -> Self {
+        self.round_corner = b;
+        self
+    }
+
+    /// Add the shadow
+    pub fn shadow_adder(mut self, adder: ShadowAdder) -> Self {
+        self.shadow_adder = Some(adder);
+        self
+    }
+
     /// Set the lines to highlight.
     pub fn highlight_lines(mut self, lines: Vec<u32>) -> Self {
         self.highlight_lines = lines;
@@ -101,6 +124,8 @@ impl<S: AsRef<str>> ImageFormatterBuilder<S> {
             line_number_pad: 6,
             line_number_chars: 0,
             highlight_lines: self.highlight_lines,
+            round_corner: self.round_corner,
+            shadow_adder: self.shadow_adder,
             code_pad_top,
             font,
         })
@@ -251,6 +276,19 @@ impl ImageFormatter {
                 .draw_text_mut(&mut image, color, x, y, style, &text);
         }
 
-        image
+        // draw_window_controls == true
+        if self.code_pad_top != 0 {
+            add_window_controls(&mut image);
+        }
+
+        if self.round_corner {
+            round_corner(&mut image, 12);
+        }
+
+        if let Some(adder) = &self.shadow_adder {
+            adder.apply_to(&image)
+        } else {
+            image
+        }
     }
 }

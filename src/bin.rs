@@ -39,16 +39,7 @@ fn run() -> Result<(), Error> {
 
     let mut formatter = config.get_formatter()?;
 
-    let mut image = formatter.format(&highlight, &theme);
-
-    if !config.no_window_controls {
-        add_window_controls(&mut image);
-    }
-    if !config.no_round_corner {
-        round_corner(&mut image, 12);
-    }
-
-    let image = config.get_shadow_adder().apply_to(&image);
+    let image = formatter.format(&highlight, &theme);
 
     if config.to_clipboard {
         dump_image_to_clipboard(&image)?;

@@ -45,7 +45,7 @@ impl ToRgba for syntect::highlighting::Color {
 }
 
 /// Add the window controls for image
-pub fn add_window_controls(image: &mut DynamicImage) {
+pub(crate) fn add_window_controls(image: &mut DynamicImage) {
     let color = [
         ("#FF5F56", "#E0443E"),
         ("#FFBD2E", "#DEA123"),
@@ -175,6 +175,12 @@ impl ShadowAdder {
     }
 }
 
+impl Default for ShadowAdder {
+    fn default() -> Self {
+        ShadowAdder::new()
+    }
+}
+
 /// copy from src to dst, taking into account alpha channels
 pub(crate) fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
     assert!(src.width() + x <= dst.width());
@@ -196,7 +202,7 @@ pub(crate) fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
 }
 
 /// Round the corner of the image
-pub fn round_corner(image: &mut DynamicImage, radius: u32) {
+pub(crate) fn round_corner(image: &mut DynamicImage, radius: u32) {
     // draw a circle with given foreground on given background
     // then split it into four pieces and paste them to the four corner of the image
     let mut circle =

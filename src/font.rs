@@ -6,7 +6,7 @@
 //! use image::{RgbImage, Rgb};
 //! use silicon::font::{FontCollection, FontStyle};
 //!
-//! let mut image = RgbImage::new(100, 100);
+//! let mut image = RgbImage::new(200, 100);
 //! let font = FontCollection::new(&[("Hack", 27.0), ("FiraCode", 27.0)]).unwrap();
 //!
 //! font.draw_text_mut(&mut image, Rgb([255, 0, 0]), 0, 0, FontStyle::REGULAR, "Hello, world");

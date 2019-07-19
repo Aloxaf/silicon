@@ -5,7 +5,7 @@
 //! ```
 //! use syntect::easy::HighlightLines;
 //! use syntect::util::LinesWithEndings;
-//! use silicon::utils::init_syntect;
+//! use silicon::utils::{init_syntect, ShadowAdder};
 //! use silicon::formatter::ImageFormatterBuilder;
 //!
 //! let (ps, ts) = init_syntect();
@@ -23,7 +23,11 @@
 //!     .map(|line| h.highlight(line, &ps))
 //!     .collect::<Vec<_>>();
 //!
-//! let mut formatter = ImageFormatterBuilder::new().build().unwrap();
+//! let mut formatter = ImageFormatterBuilder::new()
+//!     .font(vec![("Hack", 26.0)])
+//!     .shadow_adder(ShadowAdder::default())
+//!     .build()
+//!     .unwrap();
 //! let image = formatter.format(&highlight, theme);
 //!
 //! image.save("hello.png").unwrap();

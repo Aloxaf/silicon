@@ -218,6 +218,9 @@ impl Config {
             .window_controls(!self.no_window_controls)
             .line_number(!self.no_line_number)
             .font(self.font.clone().unwrap_or_else(|| vec![]))
+            .round_corner(!self.no_round_corner)
+            .window_controls(!self.no_window_controls)
+            .shadow_adder(self.get_shadow_adder())
             .highlight_lines(self.highlight_lines.clone().unwrap_or_else(|| vec![]));
 
         Ok(formatter.build()?)
