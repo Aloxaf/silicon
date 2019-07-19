@@ -1,6 +1,7 @@
 # Silicon
 
 [![crates.io](https://img.shields.io/crates/v/silicon.svg)](https://crates.io/crates/silicon)
+[![Build Status](https://travis-ci.org/Aloxaf/silicon.svg?branch=master)](https://travis-ci.org/Aloxaf/silicon)
 ![license](https://img.shields.io/crates/l/silicon.svg)
 
 Silicon is an alternative to [Carbon](https://github.com/dawnlabs/carbon) implemented in Rust.
