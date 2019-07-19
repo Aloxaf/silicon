@@ -33,14 +33,20 @@ path = "src/bin.rs"
 version = "0.2"
 default-features = false
 features = [ "color", "wrap_help" ]
+optional = true
 
 [dependencies.env_logger]
 version = "0.6.2"
 default-features = false
 features = [ "termcolor", "atty", "humantime" ]
+optional = true
 
 [patch.crates-io]
 font-kit = { version = "0.3.1", git = "https://github.com/pcwalton/font-kit" }
+
+[features]
+default = [ "bin" ]
+bin = [ "structopt", "env_logger" ]
 
 [profile.release]
 lto = true
