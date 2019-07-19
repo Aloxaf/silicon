@@ -128,15 +128,15 @@ impl ImageFont {
             .unwrap_or_else(|| self.fonts.get(&REGULAR).unwrap())
     }
 
-    pub fn get_reaular(&self) -> &Font {
+    pub fn get_regular(&self) -> &Font {
         self.fonts.get(&REGULAR).unwrap()
     }
 
     /// get the height of the font
     pub fn get_font_height(&self) -> u32 {
-        let font = self.get_reaular();
+        let font = self.get_regular();
         let metrics = font.metrics();
-        ((metrics.ascent - metrics.descent) / metrics.units_per_em as f32 * self.size).ceil() as u32
+        ((metrics.ascent - metrics.descent) / metrics.units_per_em as f32 * self.size).ceil() as u32 + 20
     }
 }
 
@@ -243,7 +243,7 @@ impl FontCollection {
         I: GenericImage,
         <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp<f32>,
     {
-        let metrics = self.0[0].get_reaular().metrics();
+        let metrics = self.0[0].get_regular().metrics();
         let offset =
             (metrics.descent / metrics.units_per_em as f32 * self.0[0].size).round() as i32;
 
