@@ -13,7 +13,7 @@
 //! ```
 use crate::error::FontError;
 use conv::ValueInto;
-use euclid::{Point2D, Rect};
+use euclid::{Point2D, Rect, Size2D};
 use font_kit::canvas::{Canvas, Format, RasterizationOptions};
 use font_kit::font::Font;
 use font_kit::hinting::HintingOptions;
@@ -146,13 +146,13 @@ impl ImageFont {
     }
 
     /// Get the regular font
-    pub fn get_reaular(&self) -> &Font {
+    pub fn get_regular(&self) -> &Font {
         self.fonts.get(&REGULAR).unwrap()
     }
 
     /// Get the height of the font
     pub fn get_font_height(&self) -> u32 {
-        let font = self.get_reaular();
+        let font = self.get_regular();
         let metrics = font.metrics();
         ((metrics.ascent - metrics.descent) / metrics.units_per_em as f32 * self.size).ceil() as u32
     }
@@ -267,7 +267,7 @@ impl FontCollection {
         I: GenericImage,
         <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp<f32>,
     {
-        let metrics = self.0[0].get_reaular().metrics();
+        let metrics = self.0[0].get_regular().metrics();
         let offset =
             (metrics.descent / metrics.units_per_em as f32 * self.0[0].size).round() as i32;
 
@@ -307,17 +307,21 @@ impl PositionedGlyph {
         )
         .to_f32();
 
-        self.font
-            .rasterize_glyph(
-                &mut canvas,
-                self.id,
-                self.size,
-                &FontTransform::identity(),
-                &origin,
-                HintingOptions::None,
-                RasterizationOptions::GrayscaleAa,
-            )
-            .unwrap();
+        // don't rasterize whitespace(https://github.com/pcwalton/font-kit/issues/7)
+        // TODO: width of TAB ?
+        if canvas.size != Size2D::new(0, 0) {
+            self.font
+                .rasterize_glyph(
+                    &mut canvas,
+                    self.id,
+                    self.size,
+                    &FontTransform::identity(),
+                    &origin,
+                    HintingOptions::None,
+                    RasterizationOptions::GrayscaleAa,
+                )
+                .unwrap();
+        }
 
         for y in (0..self.raster_rect.size.height).rev() {
             let (row_start, row_end) =
