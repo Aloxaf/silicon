@@ -1,5 +1,5 @@
 use conv::ValueInto;
-use euclid::{Point2D, Rect};
+use euclid::{Point2D, Rect, Size2D};
 use failure::Error;
 use font_kit::canvas::{Canvas, Format, RasterizationOptions};
 use font_kit::font::Font;
@@ -283,17 +283,21 @@ impl PositionedGlyph {
         )
         .to_f32();
 
-        self.font
-            .rasterize_glyph(
-                &mut canvas,
-                self.id,
-                self.size,
-                &FontTransform::identity(),
-                &origin,
-                HintingOptions::None,
-                RasterizationOptions::GrayscaleAa,
-            )
-            .unwrap();
+        // don't rasterize whitespace(https://github.com/pcwalton/font-kit/issues/7)
+        // TODO: width of TAB ?
+        if canvas.size != Size2D::new(0, 0) {
+            self.font
+                .rasterize_glyph(
+                    &mut canvas,
+                    self.id,
+                    self.size,
+                    &FontTransform::identity(),
+                    &origin,
+                    HintingOptions::None,
+                    RasterizationOptions::GrayscaleAa,
+                )
+                .unwrap();
+        }
 
         for y in (0..self.raster_rect.size.height).rev() {
             let (row_start, row_end) =
