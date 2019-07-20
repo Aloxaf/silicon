@@ -136,7 +136,7 @@ impl ImageFont {
     pub fn get_font_height(&self) -> u32 {
         let font = self.get_regular();
         let metrics = font.metrics();
-        ((metrics.ascent - metrics.descent) / metrics.units_per_em as f32 * self.size).ceil() as u32 + 20
+        ((metrics.ascent - metrics.descent) / metrics.units_per_em as f32 * self.size).ceil() as u32
     }
 }
 
