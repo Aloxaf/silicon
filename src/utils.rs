@@ -1,14 +1,21 @@
-use failure::Error;
 use image::imageops::{crop, resize};
 use image::Pixel;
 use image::{DynamicImage, FilterType, GenericImage, GenericImageView, Rgba, RgbaImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut};
 use imageproc::rect::Rect;
+use syntect::dumps;
+use syntect::highlighting::ThemeSet;
+use syntect::parsing::SyntaxSet;
 
-#[cfg(target_os = "linux")]
-use {image::ImageOutputFormat, std::process::Command};
+/// Load the default SyntaxSet and ThemeSet.
+pub fn init_syntect() -> (SyntaxSet, ThemeSet) {
+    (
+        dumps::from_binary(include_bytes!("../assets/syntaxes.bin")),
+        dumps::from_binary(include_bytes!("../assets/themes.bin")),
+    )
+}
 
-pub trait ToRgba {
+pub(crate) trait ToRgba {
     type Target;
     fn to_rgba(&self) -> Self::Target;
 }
@@ -33,7 +40,8 @@ impl ToRgba for syntect::highlighting::Color {
     }
 }
 
-pub fn add_window_controls(image: &mut DynamicImage) {
+/// Add the window controls for image
+pub(crate) fn add_window_controls(image: &mut DynamicImage) {
     let color = [
         ("#FF5F56", "#E0443E"),
         ("#FFBD2E", "#DEA123"),
@@ -66,6 +74,7 @@ pub fn add_window_controls(image: &mut DynamicImage) {
     copy_alpha(&title_bar, image.as_mut_rgba8().unwrap(), 15, 15);
 }
 
+/// Add the shadow for image
 #[derive(Debug)]
 pub struct ShadowAdder {
     background: Rgba<u8>,
@@ -90,16 +99,19 @@ impl ShadowAdder {
         }
     }
 
+    /// Set the background color
     pub fn background(mut self, color: Rgba<u8>) -> Self {
         self.background = color;
         self
     }
 
+    /// Set the shadow color
     pub fn shadow_color(mut self, color: Rgba<u8>) -> Self {
         self.shadow_color = color;
         self
     }
 
+    /// Set the shadow size
     pub fn blur_radius(mut self, sigma: f32) -> Self {
         self.blur_radius = sigma;
         self
@@ -159,8 +171,14 @@ impl ShadowAdder {
     }
 }
 
+impl Default for ShadowAdder {
+    fn default() -> Self {
+        ShadowAdder::new()
+    }
+}
+
 /// copy from src to dst, taking into account alpha channels
-pub fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
+pub(crate) fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
     assert!(src.width() + x <= dst.width());
     assert!(src.height() + y <= dst.height());
     for j in 0..src.height() {
@@ -179,8 +197,8 @@ pub fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
     }
 }
 
-/// round the corner of an image
-pub fn round_corner(image: &mut DynamicImage, radius: u32) {
+/// Round the corner of the image
+pub(crate) fn round_corner(image: &mut DynamicImage, radius: u32) {
     // draw a circle with given foreground on given background
     // then split it into four pieces and paste them to the four corner of the image
     let mut circle =
@@ -217,8 +235,12 @@ pub fn round_corner(image: &mut DynamicImage, radius: u32) {
 // issue: https://github.com/image-rs/imageproc/issues/328
 // PR: https://github.com/image-rs/imageproc/pull/330
 /// Draw as much of a circle, including its contents, as lies inside the image bounds.
-pub fn draw_filled_circle_mut<I>(image: &mut I, center: (i32, i32), radius: i32, color: I::Pixel)
-where
+pub(crate) fn draw_filled_circle_mut<I>(
+    image: &mut I,
+    center: (i32, i32),
+    radius: i32,
+    color: I::Pixel,
+) where
     I: GenericImage,
     I::Pixel: 'static,
 {
@@ -262,28 +284,4 @@ where
             p += 2 * (x - y) + 1;
         }
     }
-}
-
-#[cfg(target_os = "linux")]
-pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
-    let mut temp = tempfile::NamedTempFile::new()?;
-    image.write_to(&mut temp, ImageOutputFormat::PNG)?;
-    Command::new("xclip")
-        .args(&[
-            "-sel",
-            "clip",
-            "-t",
-            "image/png",
-            temp.path().to_str().unwrap(),
-        ])
-        .status()
-        .map_err(|e| format_err!("Failed to copy image to clipboard: {}", e))?;
-    Ok(())
-}
-
-#[cfg(not(target_os = "linux"))]
-pub fn dump_image_to_clipboard(_image: &DynamicImage) -> Result<(), Error> {
-    Err(format_err!(
-        "This feature hasn't been implemented for your system"
-    ))
 }

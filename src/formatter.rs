@@ -1,6 +1,7 @@
+//! Format the output of syntect into an image
+use crate::error::FontError;
 use crate::font::{FontCollection, FontStyle};
-use crate::utils::{copy_alpha, ToRgba};
-use failure::Error;
+use crate::utils::*;
 use image::{DynamicImage, GenericImageView, Rgba, RgbaImage};
 use syntect::highlighting::{Color, Style, Theme};
 
@@ -8,7 +9,7 @@ pub struct ImageFormatter {
     /// pad between lines
     /// Default: 2
     line_pad: u32,
-    /// pad between code and edge of code area. [top, bottom, left, right]
+    /// pad between code and edge of code area.
     /// Default: 25
     code_pad: u32,
     /// pad of top of the code area
@@ -17,6 +18,9 @@ pub struct ImageFormatter {
     /// show line number
     /// Default: true
     line_number: bool,
+    /// round corner
+    /// Default: true
+    round_corner: bool,
     /// pad between code and line number
     /// Default: 6
     line_number_pad: u32,
@@ -28,71 +32,101 @@ pub struct ImageFormatter {
     font: FontCollection,
     /// Highlight lines
     highlight_lines: Vec<u32>,
+    /// Shadow adder
+    shadow_adder: Option<ShadowAdder>,
 }
 
-pub struct ImageFormatterBuilder<'a, S: AsRef<str>> {
-    /// pad between lines
+#[derive(Default)]
+pub struct ImageFormatterBuilder<S> {
+    /// Pad between lines
     line_pad: u32,
-    /// show line number
+    /// Show line number
     line_number: bool,
-    /// pad of top of the code area
-    code_pad_top: u32,
-    /// font of english character, should be mono space font
-    font: &'a [(S, f32)],
+    /// Font of english character, should be mono space font
+    font: Vec<(S, f32)>,
     /// Highlight lines
     highlight_lines: Vec<u32>,
+    /// Whether show the window controls
+    window_controls: bool,
+    /// Whether round the corner of the image
+    round_corner: bool,
+    /// Shadow adder,
+    shadow_adder: Option<ShadowAdder>,
 }
 
-impl<'a, S: AsRef<str>> ImageFormatterBuilder<'a, S> {
+// FXIME: cannot use `ImageFormatterBuilder::new().build()` bacuse cannot infer type for `S`
+impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
     pub fn new() -> Self {
         Self {
             line_pad: 2,
             line_number: true,
-            code_pad_top: 50,
-            font: &[],
-            highlight_lines: vec![],
+            window_controls: true,
+            round_corner: true,
+            ..Default::default()
         }
     }
 
+    /// Whether show the line number
     pub fn line_number(mut self, show: bool) -> Self {
         self.line_number = show;
         self
     }
 
+    /// Set the pad between lines
     pub fn line_pad(mut self, pad: u32) -> Self {
         self.line_pad = pad;
         self
     }
 
-    pub fn code_pad_top(mut self, pad: u32) -> Self {
-        self.code_pad_top = pad;
-        self
-    }
-
-    pub fn font(mut self, fonts: &'a [(S, f32)]) -> Self {
+    /// Set the font
+    pub fn font(mut self, fonts: Vec<(S, f32)>) -> Self {
         self.font = fonts;
         self
     }
 
+    /// Whether show the windows controls
+    pub fn window_controls(mut self, show: bool) -> Self {
+        self.window_controls = show;
+        self
+    }
+
+    /// Whether round the corner
+    pub fn round_corner(mut self, b: bool) -> Self {
+        self.round_corner = b;
+        self
+    }
+
+    /// Add the shadow
+    pub fn shadow_adder(mut self, adder: ShadowAdder) -> Self {
+        self.shadow_adder = Some(adder);
+        self
+    }
+
+    /// Set the lines to highlight.
     pub fn highlight_lines(mut self, lines: Vec<u32>) -> Self {
         self.highlight_lines = lines;
         self
     }
 
-    pub fn build(self) -> Result<ImageFormatter, Error> {
+    pub fn build(self) -> Result<ImageFormatter, FontError> {
         let font = if self.font.is_empty() {
             FontCollection::default()
         } else {
-            FontCollection::new(self.font)?
+            FontCollection::new(&self.font)?
         };
+
+        let code_pad_top = if self.window_controls { 50 } else { 0 };
+
         Ok(ImageFormatter {
             line_pad: self.line_pad,
             code_pad: 25,
-            code_pad_top: self.code_pad_top,
             line_number: self.line_number,
             line_number_pad: 6,
             line_number_chars: 0,
             highlight_lines: self.highlight_lines,
+            round_corner: self.round_corner,
+            shadow_adder: self.shadow_adder,
+            code_pad_top,
             font,
         })
     }
@@ -242,6 +276,19 @@ impl ImageFormatter {
                 .draw_text_mut(&mut image, color, x, y, style, &text);
         }
 
-        image
+        // draw_window_controls == true
+        if self.code_pad_top != 0 {
+            add_window_controls(&mut image);
+        }
+
+        if self.round_corner {
+            round_corner(&mut image, 12);
+        }
+
+        if let Some(adder) = &self.shadow_adder {
+            adder.apply_to(&image)
+        } else {
+            image
+        }
     }
 }

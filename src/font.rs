@@ -1,6 +1,19 @@
+//! A basic font manager with fallback support
+//!
+//! # Example
+//!
+//! ```rust
+//! use image::{RgbImage, Rgb};
+//! use silicon::font::{FontCollection, FontStyle};
+//!
+//! let mut image = RgbImage::new(200, 100);
+//! let font = FontCollection::new(&[("Hack", 27.0), ("FiraCode", 27.0)]).unwrap();
+//!
+//! font.draw_text_mut(&mut image, Rgb([255, 0, 0]), 0, 0, FontStyle::REGULAR, "Hello, world");
+//! ```
+use crate::error::FontError;
 use conv::ValueInto;
 use euclid::{Point2D, Rect, Size2D};
-use failure::Error;
 use font_kit::canvas::{Canvas, Format, RasterizationOptions};
 use font_kit::font::Font;
 use font_kit::hinting::HintingOptions;
@@ -14,6 +27,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use syntect::highlighting;
 
+/// Font style
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum FontStyle {
     REGULAR,
@@ -40,6 +54,7 @@ impl From<highlighting::FontStyle> for FontStyle {
 
 use FontStyle::*;
 
+/// A single font with specific size
 #[derive(Debug)]
 pub struct ImageFont {
     pub fonts: HashMap<FontStyle, Font>,
@@ -47,6 +62,7 @@ pub struct ImageFont {
 }
 
 impl Default for ImageFont {
+    /// It will use Hack font (size: 26.0) by default
     fn default() -> Self {
         let l = vec![
             (
@@ -77,7 +93,7 @@ impl Default for ImageFont {
 }
 
 impl ImageFont {
-    pub fn new(name: &str, size: f32) -> Result<Self, Error> {
+    pub fn new(name: &str, size: f32) -> Result<Self, FontError> {
         // Silicon already contains Hack font
         if name == "Hack" {
             let mut font = Self::default();
@@ -122,17 +138,19 @@ impl ImageFont {
         Ok(Self { fonts, size })
     }
 
+    /// Get a font by style. If there is no such a font, it will return the REGULAR font.
     pub fn get_by_style(&self, style: FontStyle) -> &Font {
         self.fonts
             .get(&style)
             .unwrap_or_else(|| self.fonts.get(&REGULAR).unwrap())
     }
 
+    /// Get the regular font
     pub fn get_regular(&self) -> &Font {
         self.fonts.get(&REGULAR).unwrap()
     }
 
-    /// get the height of the font
+    /// Get the height of the font
     pub fn get_font_height(&self) -> u32 {
         let font = self.get_regular();
         let metrics = font.metrics();
@@ -140,6 +158,9 @@ impl ImageFont {
     }
 }
 
+/// A collection of font
+///
+/// It can be used to draw text on the image.
 #[derive(Debug)]
 pub struct FontCollection(Vec<ImageFont>);
 
@@ -150,7 +171,8 @@ impl Default for FontCollection {
 }
 
 impl FontCollection {
-    pub fn new<S: AsRef<str>>(font_list: &[(S, f32)]) -> Result<Self, Error> {
+    /// Create a FontCollection with several fonts.
+    pub fn new<S: AsRef<str>>(font_list: &[(S, f32)]) -> Result<Self, FontError> {
         let mut fonts = vec![];
         for (name, size) in font_list {
             let name = name.as_ref();
@@ -218,12 +240,14 @@ impl FontCollection {
         (glyphs, delta_x)
     }
 
+    /// Get the width of the given glyph
     fn get_glyph_width(font: &Font, id: u32, size: f32) -> u32 {
         let metrics = font.metrics();
         let advance = font.advance(id).unwrap();
         (advance / metrics.units_per_em as f32 * size).x.ceil() as u32
     }
 
+    /// Get the width of the given text
     pub fn get_text_len(&self, text: &str) -> u32 {
         self.layout(text, REGULAR).1
     }

@@ -206,26 +206,22 @@ impl Config {
 
     pub fn theme(&self, ts: &ThemeSet) -> Result<Theme, Error> {
         if let Some(theme) = ts.themes.get(&self.theme) {
-            return Ok(theme.clone());
+            Ok(theme.clone())
         } else {
-            return Ok(ThemeSet::get_theme(&self.theme)?);
+            Ok(ThemeSet::get_theme(&self.theme)?)
         }
-        // &ts.themes[&self.theme]
     }
 
     pub fn get_formatter(&self) -> Result<ImageFormatter, Error> {
-        let mut formatter = ImageFormatterBuilder::new()
+        let formatter = ImageFormatterBuilder::new()
             .line_pad(self.line_pad)
+            .window_controls(!self.no_window_controls)
+            .line_number(!self.no_line_number)
+            .font(self.font.clone().unwrap_or_else(|| vec![]))
+            .round_corner(!self.no_round_corner)
+            .window_controls(!self.no_window_controls)
+            .shadow_adder(self.get_shadow_adder())
             .highlight_lines(self.highlight_lines.clone().unwrap_or_else(|| vec![]));
-        if let Some(fonts) = &self.font {
-            formatter = formatter.font(fonts);
-        }
-        if self.no_line_number {
-            formatter = formatter.line_number(false);
-        }
-        if self.no_window_controls {
-            formatter = formatter.code_pad_top(0);
-        }
 
         Ok(formatter.build()?)
     }

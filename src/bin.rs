@@ -4,26 +4,50 @@ extern crate log;
 extern crate failure;
 
 use crate::config::Config;
-use crate::utils::{add_window_controls, dump_image_to_clipboard, round_corner};
+use crate::utils::*;
 use failure::Error;
+use image::DynamicImage;
 use structopt::StructOpt;
-use syntect::dumps;
 use syntect::easy::HighlightLines;
-use syntect::highlighting::ThemeSet;
-use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
+#[cfg(target_os = "linux")]
+use {image::ImageOutputFormat, std::process::Command};
 
-mod blur;
-mod config;
-mod font;
-mod formatter;
-mod utils;
+pub mod blur;
+pub mod config;
+pub mod error;
+pub mod font;
+pub mod formatter;
+pub mod utils;
+
+#[cfg(target_os = "linux")]
+pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
+    let mut temp = tempfile::NamedTempFile::new()?;
+    image.write_to(&mut temp, ImageOutputFormat::PNG)?;
+    Command::new("xclip")
+        .args(&[
+            "-sel",
+            "clip",
+            "-t",
+            "image/png",
+            temp.path().to_str().unwrap(),
+        ])
+        .status()
+        .map_err(|e| format_err!("Failed to copy image to clipboard: {}", e))?;
+    Ok(())
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn dump_image_to_clipboard(_image: &DynamicImage) -> Result<(), Error> {
+    Err(format_err!(
+        "This feature hasn't been implemented for your system"
+    ))
+}
 
 fn run() -> Result<(), Error> {
     let config: Config = Config::from_args();
 
-    let ps = dumps::from_binary::<SyntaxSet>(include_bytes!("../assets/syntaxes.bin")); //SyntaxSet::load_defaults_newlines();
-    let ts = dumps::from_binary::<ThemeSet>(include_bytes!("../assets/themes.bin")); // ThemeSet::load();
+    let (ps, ts) = init_syntect();
 
     if config.list_themes {
         for i in ts.themes.keys() {
@@ -43,16 +67,7 @@ fn run() -> Result<(), Error> {
 
     let mut formatter = config.get_formatter()?;
 
-    let mut image = formatter.format(&highlight, &theme);
-
-    if !config.no_window_controls {
-        add_window_controls(&mut image);
-    }
-    if !config.no_round_corner {
-        round_corner(&mut image, 12);
-    }
-
-    let image = config.get_shadow_adder().apply_to(&image);
+    let image = formatter.format(&highlight, &theme);
 
     if config.to_clipboard {
         dump_image_to_clipboard(&image)?;

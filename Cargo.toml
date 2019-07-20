@@ -14,25 +14,42 @@ syntect = "3.2"
 image = "0.21"
 imageproc = "0.18"
 font-kit = "0.3.1"
-failure = "0.1.5"
 clipboard = "0.5.0"
 tempfile = "3.1.0"
 conv = "0.3.3"
 euclid = "0.19"
 log = "0.4.7"
 
+[lib]
+name = "silicon"
+path = "src/lib.rs"
+
+[[bin]]
+name = "silicon"
+path = "src/bin.rs"
+
+[dependencies.failure]
+version = "0.1.5"
+optional = true
+
 [dependencies.structopt]
 version = "0.2"
 default-features = false
 features = [ "color", "wrap_help" ]
+optional = true
 
 [dependencies.env_logger]
 version = "0.6.2"
 default-features = false
 features = [ "termcolor", "atty", "humantime" ]
+optional = true
 
 [patch.crates-io]
 font-kit = { version = "0.3.1", git = "https://github.com/pcwalton/font-kit" }
+
+[features]
+default = [ "bin" ]
+bin = [ "structopt", "env_logger", "failure" ]
 
 [profile.release]
 lto = true
