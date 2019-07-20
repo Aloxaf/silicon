@@ -33,12 +33,6 @@ It's not as beautiful as Carbon...
 cargo install silicon
 ```
 
-Or the git version (Currently only the git version can work well on Windows)
-
-```
-cargo install --git https://github.com/Aloxaf/silicon --branch dev
-```
-
 `xclip` is required on Linux for clipboard support.
 
 ## Basic Usage
