@@ -222,7 +222,7 @@ impl FontCollection {
                             RasterizationOptions::GrayscaleAa,
                         )
                         .unwrap();
-                    let x = delta_x as i32;
+                    let x = delta_x as i32 + raster_rect.origin.x;
                     let y = height as i32 - raster_rect.size.height - raster_rect.origin.y;
                     delta_x += Self::get_glyph_width(font, id, imfont.size);
 
