@@ -17,7 +17,7 @@ font-kit = "0.3.1"
 clipboard = "0.5.0"
 tempfile = "3.1.0"
 conv = "0.3.3"
-euclid = "0.19"
+euclid = "0.20"
 log = "0.4.7"
 
 [lib]
