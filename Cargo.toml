@@ -13,11 +13,11 @@ edition = "2018"
 syntect = "3.2"
 image = "0.21"
 imageproc = "0.18"
-font-kit = "0.3.1"
+font-kit = "0.4"
 clipboard = "0.5.0"
 tempfile = "3.1.0"
 conv = "0.3.3"
-euclid = "0.19"
+euclid = "0.20"
 log = "0.4.7"
 fastblur = "0.1.0"
 
@@ -46,7 +46,6 @@ features = [ "termcolor", "atty", "humantime" ]
 optional = true
 
 [patch.crates-io]
-font-kit = { version = "0.3.1", git = "https://github.com/pcwalton/font-kit" }
 imageproc = { version = "0.18.0", git = "https://github.com/image-rs/imageproc" }
 fastblur = { version = "0.1.0", git = "https://github.com/Aloxaf/fastblur", branch = "rgba" }
 
