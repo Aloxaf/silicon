@@ -19,6 +19,7 @@ tempfile = "3.1.0"
 conv = "0.3.3"
 euclid = "0.19"
 log = "0.4.7"
+fastblur = "0.1.0"
 
 [lib]
 name = "silicon"
@@ -46,6 +47,8 @@ optional = true
 
 [patch.crates-io]
 font-kit = { version = "0.3.1", git = "https://github.com/pcwalton/font-kit" }
+imageproc = { version = "0.18.0", git = "https://github.com/image-rs/imageproc" }
+fastblur = { version = "0.1.0", git = "https://github.com/Aloxaf/fastblur", branch = "rgba" }
 
 [features]
 default = [ "bin" ]

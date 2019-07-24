@@ -382,6 +382,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "fastblur"
+version = "0.1.0"
+source = "git+https://github.com/Aloxaf/fastblur?branch=rgba#454f299dbbddbb1d55475bfe06498b2c2406a33f"
+
+[[package]]
 name = "flate2"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -507,7 +512,7 @@ dependencies = [
 [[package]]
 name = "imageproc"
 version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/image-rs/imageproc#58adc520090000c36da98f59338d41d8e3e2faa6"
 dependencies = [
  "conv 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.21.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1172,9 +1177,10 @@ dependencies = [
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.19.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fastblur 0.1.0 (git+https://github.com/Aloxaf/fastblur?branch=rgba)",
  "font-kit 0.3.1 (git+https://github.com/pcwalton/font-kit)",
  "image 0.21.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "imageproc 0.18.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "imageproc 0.18.0 (git+https://github.com/image-rs/imageproc)",
  "log 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "syntect 3.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1460,6 +1466,7 @@ dependencies = [
 "checksum expat-sys 2.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "658f19728920138342f68408b7cf7644d90d4784353d8ebc32e7e8663dbe45fa"
 "checksum failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "795bd83d3abeb9220f257e597aa0080a508b27533824adf336529648f6abf7e2"
 "checksum failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "ea1063915fd7ef4309e222a5a07cf9c319fb9c7836b1f89b85458672dbb127e1"
+"checksum fastblur 0.1.0 (git+https://github.com/Aloxaf/fastblur?branch=rgba)" = "<none>"
 "checksum flate2 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)" = "550934ad4808d5d39365e5d61727309bf18b3b02c6c56b729cb92e7dd84bc3d8"
 "checksum float-ord 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7bad48618fdb549078c333a7a8528acb57af271d0433bdecd523eb620628364e"
 "checksum fnv 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)" = "2fad85553e09a6f881f739c29f0b00b0f01357c743266d478b68951ce23285f3"
@@ -1473,7 +1480,7 @@ dependencies = [
 "checksum heck 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "20564e78d53d2bb135c343b3f47714a56af2061f1c928fdb541dc7b9fdd94205"
 "checksum humantime 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3ca7e5f2e110db35f93b837c81797f3714500b81d517bf20c431b16d3ca4f114"
 "checksum image 0.21.2 (registry+https://github.com/rust-lang/crates.io-index)" = "99198e595d012efccf12abf4abc08da2d97be0b0355a2b08d101347527476ba4"
-"checksum imageproc 0.18.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f38610daacce75022a6fc140d7895d3813d0ce0709185873b5875b1365db3ea4"
+"checksum imageproc 0.18.0 (git+https://github.com/image-rs/imageproc)" = "<none>"
 "checksum inflate 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)" = "1cdb29978cc5797bd8dcc8e5bf7de604891df2a8dc576973d71a281e916db2ff"
 "checksum itertools 0.7.11 (registry+https://github.com/rust-lang/crates.io-index)" = "0d47946d458e94a1b7bcabbf6521ea7c037062c81f534615abcad76e84d4970d"
 "checksum itoa 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "501266b7edd0174f8530248f87f99c88fbe60ca4ef3dd486835b8d8d53136f7f"
