@@ -47,7 +47,7 @@ silicon main.rs -o main.png
 Read code from clipboard, and copy the result image to clipboard(`--to-clipboard` is only available on Linux)
 
 ```
-silicon --from-clipboard --l rs --to-clipboard
+silicon --from-clipboard -l rs --to-clipboard
 ```
 
 Use multiple fonts
