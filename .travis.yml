@@ -1,4 +1,5 @@
 language: rust
+cache: cargo
 rust:
   - stable
   - beta
@@ -7,3 +8,11 @@ matrix:
   allow_failures:
     - rust: nightly
   fast_finish: true
+branches:
+  only:
+    # This is where pull requests from "bors r+" are built.
+    - staging
+    # This is where pull requests from "bors try" are built.
+    - trying
+    # Uncomment this to enable building pull requests.
+    - master
