@@ -278,7 +278,7 @@ impl FontCollection {
                 if v <= std::f32::EPSILON {
                     return;
                 }
-                let (x, y) = (px + x, py + y);
+                let (x, y) = ((px + x as i32) as u32, (py + y as i32) as u32);
                 let pixel = image.get_pixel(x, y);
                 let weighted_color = weighted_sum(pixel, color, 1.0 - v, v);
                 image.put_pixel(x, y, weighted_color);
@@ -298,7 +298,7 @@ struct PositionedGlyph {
 }
 
 impl PositionedGlyph {
-    fn draw<O: FnMut(u32, u32, f32)>(&self, offset: i32, mut o: O) {
+    fn draw<O: FnMut(i32, i32, f32)>(&self, offset: i32, mut o: O) {
         let mut canvas = Canvas::new(&self.raster_rect.size.to_u32(), Format::A8);
 
         let origin = Point2D::new(
@@ -333,7 +333,7 @@ impl PositionedGlyph {
                 let px = self.position.x + x;
                 let py = self.position.y + y + offset;
 
-                o(px as u32, py as u32, val);
+                o(px, py, val);
             }
         }
     }
