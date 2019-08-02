@@ -40,7 +40,7 @@ fn parse_line_range(s: &str) -> Result<Vec<u32>, ParseIntError> {
         if range.len() == 1 {
             result.push(range[0])
         } else {
-            for i in range[0]..range[1] {
+            for i in range[0]..=range[1] {
                 result.push(i);
             }
         }
