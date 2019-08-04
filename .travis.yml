@@ -8,6 +8,9 @@ matrix:
   allow_failures:
     - rust: nightly
   fast_finish: true
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y libx11-xcb-dev libxcb-shape0-dev libxcb-xfixes0-dev
 branches:
   only:
     # This is where pull requests from "bors r+" are built.
