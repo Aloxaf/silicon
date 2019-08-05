@@ -30,41 +30,60 @@ It's not as beautiful as Carbon...
 
 ## Install
 
-```
+### Cargo
+
+```bash
 cargo install silicon
+
+# or the latest version
+
+cargo install --git https://github.com/Aloxaf/silicon
 ```
 
-`xclip` is required on Linux for clipboard support.
+`xclip`, `freetype`, `fontconfig` is required on Linux.
+
+On Arch Linux, you can install them by `pacman -S freetype2 fontconfig xclip`
+
+### AUR
+
+Silicon is available on AUR (Thanks to @radmen).
+
+You can install it with any AUR helpers you like.
+
+eg.
+```bash
+pikaur -S silicon
+```
 
 ## Basic Usage
 
 Read code from file
 
-```
+```bash
 silicon main.rs -o main.png 
 ```
 
 Read code from clipboard, and copy the result image to clipboard(`--to-clipboard` is only available on Linux)
 
-```
+```bash
 silicon --from-clipboard -l rs --to-clipboard
 ```
 
 Use multiple fonts
 
-```
+```bash
 silicon main.rs -o main.png -f 'Hack; SimSun'
 ```
 
 Highlight specified line
 
-```
+```bash
 silicon main.rs -o main.png --highlight-lines '1; 3-4'
 ```
 
 Custom the image
 
-```
+```bash
 silicon ./target/test.rs -o test.png --shadow-color '#555555' --background '#ffffff' --shadow-blur-radius 30 --no-window-controls
 ```
 
