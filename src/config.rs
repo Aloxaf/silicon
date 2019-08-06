@@ -139,6 +139,10 @@ pub struct Config {
     #[structopt(long, value_name = "X", default_value = "0")]
     pub shadow_offset_x: i32,
 
+    /// Tab width
+    #[structopt(long, value_name = "WIDTH", default_value = "4")]
+    pub tab_width: u8,
+
     /// The syntax highlight theme. It can be a theme name or path to a .tmTheme file.
     #[structopt(long, value_name = "THEME", default_value = "Dracula")]
     pub theme: String,
@@ -221,6 +225,7 @@ impl Config {
             .round_corner(!self.no_round_corner)
             .window_controls(!self.no_window_controls)
             .shadow_adder(self.get_shadow_adder())
+            .tab_width(self.tab_width)
             .highlight_lines(self.highlight_lines.clone().unwrap_or_else(|| vec![]));
 
         Ok(formatter.build()?)

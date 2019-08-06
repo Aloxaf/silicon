@@ -308,7 +308,6 @@ impl PositionedGlyph {
         .to_f32();
 
         // don't rasterize whitespace(https://github.com/pcwalton/font-kit/issues/7)
-        // TODO: width of TAB ?
         if canvas.size != Size2D::new(0, 0) {
             self.font
                 .rasterize_glyph(

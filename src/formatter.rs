@@ -34,6 +34,8 @@ pub struct ImageFormatter {
     highlight_lines: Vec<u32>,
     /// Shadow adder
     shadow_adder: Option<ShadowAdder>,
+    /// Tab width
+    tab_width: u8,
 }
 
 #[derive(Default)]
@@ -52,6 +54,8 @@ pub struct ImageFormatterBuilder<S> {
     round_corner: bool,
     /// Shadow adder,
     shadow_adder: Option<ShadowAdder>,
+    /// Tab width
+    tab_width: u8,
 }
 
 // FIXME: cannot use `ImageFormatterBuilder::new().build()` bacuse cannot infer type for `S`
@@ -62,6 +66,7 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             line_number: true,
             window_controls: true,
             round_corner: true,
+            tab_width: 4,
             ..Default::default()
         }
     }
@@ -108,6 +113,12 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
         self
     }
 
+    /// Set tab width
+    pub fn tab_width(mut self, width: u8) -> Self {
+        self.tab_width = width;
+        self
+    }
+
     pub fn build(self) -> Result<ImageFormatter, FontError> {
         let font = if self.font.is_empty() {
             FontCollection::default()
@@ -126,6 +137,7 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             highlight_lines: self.highlight_lines,
             round_corner: self.round_corner,
             shadow_adder: self.shadow_adder,
+            tab_width: self.tab_width,
             code_pad_top,
             font,
         })
@@ -173,6 +185,8 @@ impl ImageFormatter {
 
     /// create
     fn create_drawables(&self, v: &[Vec<(Style, &str)>]) -> Drawable {
+        // tab should be replaced to whitespace so that it can be rendered correctly
+        let tab = " ".repeat(self.tab_width as usize);
         let mut drawables = vec![];
         let (mut max_width, mut max_lineno) = (0, 0);
 
@@ -181,7 +195,7 @@ impl ImageFormatter {
             let mut width = self.get_left_pad();
 
             for (style, text) in tokens {
-                let text = text.trim_end_matches('\n');
+                let text = text.trim_end_matches('\n').replace('\t', &tab);
                 if text.is_empty() {
                     continue;
                 }
@@ -194,7 +208,7 @@ impl ImageFormatter {
                     text.to_owned(),
                 ));
 
-                width += self.font.get_text_len(text);
+                width += self.font.get_text_len(&text);
 
                 max_width = max_width.max(width);
             }
