@@ -1154,7 +1154,7 @@ dependencies = [
 
 [[package]]
 name = "silicon"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "clipboard 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "conv 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
