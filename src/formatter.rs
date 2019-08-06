@@ -54,7 +54,7 @@ pub struct ImageFormatterBuilder<S> {
     shadow_adder: Option<ShadowAdder>,
 }
 
-// FXIME: cannot use `ImageFormatterBuilder::new().build()` bacuse cannot infer type for `S`
+// FIXME: cannot use `ImageFormatterBuilder::new().build()` bacuse cannot infer type for `S`
 impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
     pub fn new() -> Self {
         Self {
