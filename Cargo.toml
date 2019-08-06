@@ -19,7 +19,6 @@ tempfile = "3.1.0"
 conv = "0.3.3"
 euclid = "0.20"
 log = "0.4.8"
-fastblur = "0.1.0"
 
 [lib]
 name = "silicon"
@@ -44,11 +43,6 @@ version = "0.6.2"
 default-features = false
 features = [ "termcolor", "atty", "humantime" ]
 optional = true
-
-[patch.crates-io]
-imageproc = { git = "https://github.com/image-rs/imageproc" }
-fastblur = { git = "https://github.com/Aloxaf/fastblur", branch = "rgba" }
-font-kit = { git = "https://github.com/pcwalton/font-kit" }
 
 [features]
 default = [ "bin" ]

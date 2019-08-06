@@ -35,14 +35,20 @@ It's not as beautiful as Carbon...
 ```bash
 cargo install silicon
 
-# or the latest version
+# or the latest version (Linux/macOS)
 
 cargo install --git https://github.com/Aloxaf/silicon
+
+# for Windows (see #11)
+
+git clone --single-branch --branch dev https://github.com/Aloxaf/silicon
+cd silicon
+cargo build --release
 ```
 
-`xclip`, `freetype`, `fontconfig` is required on Linux.
+`xclip`, `libxcb`, `fontconfig` is required on Linux.
 
-On Arch Linux, you can install them by `pacman -S freetype2 fontconfig xclip`
+On Arch Linux, you can install them by `pacman -S libxcb fontconfig xclip`
 
 ### AUR
 

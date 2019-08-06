@@ -1,7 +1,7 @@
 use image::imageops::{crop, resize};
 use image::Pixel;
 use image::{DynamicImage, FilterType, GenericImage, GenericImageView, Rgba, RgbaImage};
-use imageproc::drawing::{draw_filled_rect_mut, draw_filled_circle_mut};
+use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut};
 use imageproc::rect::Rect;
 use syntect::dumps;
 use syntect::highlighting::ThemeSet;
@@ -228,4 +228,60 @@ pub(crate) fn round_corner(image: &mut DynamicImage, radius: u32) {
 
     let part = crop(&mut circle, radius + 1, radius + 1, radius, radius);
     image.copy_from(&part, width - radius, height - radius);
+}
+
+// `draw_filled_circle_mut` doesn't work well with small radius in imageproc v0.18.0
+// it has been fixed but still have to wait for releasing
+// issue: https://github.com/image-rs/imageproc/issues/328
+// PR: https://github.com/image-rs/imageproc/pull/330
+/// Draw as much of a circle, including its contents, as lies inside the image bounds.
+pub(crate) fn draw_filled_circle_mut<I>(
+    image: &mut I,
+    center: (i32, i32),
+    radius: i32,
+    color: I::Pixel,
+) where
+    I: GenericImage,
+    I::Pixel: 'static,
+{
+    let mut x = 0i32;
+    let mut y = radius;
+    let mut p = 1 - radius;
+    let x0 = center.0;
+    let y0 = center.1;
+
+    while x <= y {
+        draw_line_segment_mut(
+            image,
+            ((x0 - x) as f32, (y0 + y) as f32),
+            ((x0 + x) as f32, (y0 + y) as f32),
+            color,
+        );
+        draw_line_segment_mut(
+            image,
+            ((x0 - y) as f32, (y0 + x) as f32),
+            ((x0 + y) as f32, (y0 + x) as f32),
+            color,
+        );
+        draw_line_segment_mut(
+            image,
+            ((x0 - x) as f32, (y0 - y) as f32),
+            ((x0 + x) as f32, (y0 - y) as f32),
+            color,
+        );
+        draw_line_segment_mut(
+            image,
+            ((x0 - y) as f32, (y0 - x) as f32),
+            ((x0 + y) as f32, (y0 - x) as f32),
+            color,
+        );
+
+        x += 1;
+        if p < 0 {
+            p += 2 * x + 1;
+        } else {
+            y -= 1;
+            p += 2 * (x - y) + 1;
+        }
+    }
 }
