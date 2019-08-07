@@ -44,6 +44,9 @@ default-features = false
 features = [ "termcolor", "atty", "humantime" ]
 optional = true
 
+[patch.crates-io]
+font-kit = { git = "https://github.com/pcwalton/font-kit" }
+
 [features]
 default = [ "bin" ]
 bin = [ "structopt", "env_logger", "failure" ]
