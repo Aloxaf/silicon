@@ -46,10 +46,6 @@ cd silicon
 cargo build --release
 ```
 
-`xclip`, `libxcb`, `fontconfig` is required on Linux.
-
-On Arch Linux, you can install them by `pacman -S libxcb fontconfig xclip`
-
 ### AUR
 
 Silicon is available on AUR (Thanks to @radmen).
@@ -59,6 +55,14 @@ You can install it with any AUR helpers you like.
 eg.
 ```bash
 pikaur -S silicon
+```
+
+## Dependencies
+
+### Arch Linux
+
+```bash
+sudo pacman -S --needed pkgconf freetype2 fontconfig libxcb xclip
 ```
 
 ## Basic Usage
