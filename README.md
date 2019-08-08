@@ -65,7 +65,7 @@ pikaur -S silicon
 sudo pacman -S --needed pkgconf freetype2 fontconfig libxcb xclip
 ```
 
-## Basic Usage
+## Examples
 
 Read code from file
 
@@ -102,7 +102,7 @@ silicon ./target/test.rs -o test.png \
 Transparent background
 
 ```bash
-silicon ./target/test.rs -o test.png --background '#00ffffff'
+silicon ./target/test.rs -o test.png --background '#ffffff00'
 ```
 
 see `silicon --help` for detail

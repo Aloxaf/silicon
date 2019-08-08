@@ -20,15 +20,18 @@ pub trait ToRgba {
     fn to_rgba(&self) -> Self::Target;
 }
 
+/// Parse hex color (#RRGGBB or #RRGGBBAA)
 impl ToRgba for str {
     type Target = Result<Rgba<u8>, std::num::ParseIntError>;
     fn to_rgba(&self) -> Self::Target {
-        let rgb = u32::from_str_radix(&self[1..], 16)?;
+        let mut rgb = u32::from_str_radix(&self[1..], 16)?;
 
         let alpha = if self.len() <= 7 {
             0xff
         } else {
-            ((rgb >> 24) & 0xff) as u8
+            let alpha = (rgb & 0xff) as u8;
+            rgb >>= 8;
+            alpha
         };
 
         Ok(Rgba([
@@ -301,6 +304,6 @@ mod tests {
     #[test]
     fn to_rgba() {
         assert_eq!("#abcdef".to_rgba().unwrap(), Rgba([0xab, 0xcd, 0xef, 0xff]));
-        assert_eq!("#00abcdef".to_rgba().unwrap(), Rgba([0xab, 0xcd, 0xef, 0x00]));
+        assert_eq!("#abcdef00".to_rgba().unwrap(), Rgba([0xab, 0xcd, 0xef, 0x00]));
     }
 }
