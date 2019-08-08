@@ -15,7 +15,7 @@ pub fn init_syntect() -> (SyntaxSet, ThemeSet) {
     )
 }
 
-pub(crate) trait ToRgba {
+pub trait ToRgba {
     type Target;
     fn to_rgba(&self) -> Self::Target;
 }
@@ -25,7 +25,7 @@ impl ToRgba for str {
     fn to_rgba(&self) -> Self::Target {
         let rgb = u32::from_str_radix(&self[1..], 16)?;
 
-        let alpha = if self.len() == 7 {
+        let alpha = if self.len() <= 7 {
             0xff
         } else {
             ((rgb >> 24) & 0xff) as u8
