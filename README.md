@@ -65,7 +65,7 @@ pikaur -S silicon
 sudo pacman -S --needed pkgconf freetype2 fontconfig libxcb xclip
 ```
 
-## Basic Usage
+## Examples
 
 Read code from file
 
@@ -94,7 +94,15 @@ silicon main.rs -o main.png --highlight-lines '1; 3-4'
 Custom the image
 
 ```bash
-silicon ./target/test.rs -o test.png --shadow-color '#555555' --background '#ffffff' --shadow-blur-radius 30 --no-window-controls
+silicon ./target/test.rs -o test.png \
+    --shadow-color '#555555' --background '#ffffff' \
+    --shadow-blur-radius 30 --no-window-controls
+```
+
+Transparent background
+
+```bash
+silicon ./target/test.rs -o test.png --background '#ffffff00'
 ```
 
 see `silicon --help` for detail

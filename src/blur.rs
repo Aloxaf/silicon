@@ -284,7 +284,7 @@ fn box_blur_horz(
             val_r += isize::from(bb[0]) - isize::from(fv[0]);
             val_g += isize::from(bb[1]) - isize::from(fv[1]);
             val_b += isize::from(bb[2]) - isize::from(fv[2]);
-            val_a += isize::from(bb[2]) - isize::from(fv[3]);
+            val_a += isize::from(bb[3]) - isize::from(fv[3]);
 
             frontbuf[ti] = [
                 round(val_r as f32 * iarr) as u8,
