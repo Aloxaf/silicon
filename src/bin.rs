@@ -3,15 +3,13 @@ extern crate log;
 #[macro_use]
 extern crate failure;
 
+use crate::clipboard::dump_image_to_clipboard;
 use crate::config::Config;
 use crate::utils::*;
 use failure::Error;
-use image::DynamicImage;
 use structopt::StructOpt;
 use syntect::easy::HighlightLines;
 use syntect::util::LinesWithEndings;
-#[cfg(target_os = "linux")]
-use {image::ImageOutputFormat, std::process::Command};
 
 pub mod blur;
 pub mod config;
@@ -20,29 +18,7 @@ pub mod font;
 pub mod formatter;
 pub mod utils;
 
-#[cfg(target_os = "linux")]
-pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
-    let mut temp = tempfile::NamedTempFile::new()?;
-    image.write_to(&mut temp, ImageOutputFormat::PNG)?;
-    Command::new("xclip")
-        .args(&[
-            "-sel",
-            "clip",
-            "-t",
-            "image/png",
-            temp.path().to_str().unwrap(),
-        ])
-        .status()
-        .map_err(|e| format_err!("Failed to copy image to clipboard: {}", e))?;
-    Ok(())
-}
-
-#[cfg(not(target_os = "linux"))]
-pub fn dump_image_to_clipboard(_image: &DynamicImage) -> Result<(), Error> {
-    Err(format_err!(
-        "This feature hasn't been implemented for your system"
-    ))
-}
+mod clipboard;
 
 fn run() -> Result<(), Error> {
     let config: Config = Config::from_args();
