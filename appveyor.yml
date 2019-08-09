@@ -20,6 +20,8 @@ environment:
     #   RUST_VERSION: nightly
     - TARGET: x86_64-pc-windows-msvc
       RUST_VERSION: nightly
+    - TARGET: x86_64-pc-windows-msvc
+      RUST_VERSION: beta
 
 install:
   - ps: >-
