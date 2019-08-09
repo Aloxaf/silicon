@@ -1,3 +1,4 @@
+use crate::error::ParseColorError;
 use image::imageops::{crop, resize};
 use image::Pixel;
 use image::{DynamicImage, FilterType, GenericImage, GenericImageView, Rgba, RgbaImage};
@@ -22,24 +23,50 @@ pub trait ToRgba {
 
 /// Parse hex color (#RRGGBB or #RRGGBBAA)
 impl ToRgba for str {
-    type Target = Result<Rgba<u8>, std::num::ParseIntError>;
+    type Target = Result<Rgba<u8>, ParseColorError>;
+
     fn to_rgba(&self) -> Self::Target {
-        let mut rgb = u32::from_str_radix(&self[1..], 16)?;
+        if self.as_bytes()[0] != b'#' {
+            return Err(ParseColorError::InvalidDigit);
+        }
+        let mut color = u32::from_str_radix(&self[1..], 16)?;
 
-        let alpha = if self.len() <= 7 {
-            0xff
-        } else {
-            let alpha = (rgb & 0xff) as u8;
-            rgb >>= 8;
-            alpha
-        };
+        match self.len() {
+            // RGB or RGBA
+            4 | 5 => {
+                let a = if self.len() == 5 {
+                    let alpha = (color & 0xf) as u8;
+                    color >>= 4;
+                    alpha
+                } else {
+                    0xff
+                };
 
-        Ok(Rgba([
-            ((rgb >> 16) & 0xff) as u8,
-            ((rgb >> 8) & 0xff) as u8,
-            (rgb & 0xff) as u8,
-            alpha,
-        ]))
+                let r = ((color >> 8) & 0xf) as u8;
+                let g = ((color >> 4) & 0xf) as u8;
+                let b = (color & 0xf) as u8;
+
+                Ok(Rgba([r << 4 | r, g << 4 | g, b << 4 | b, a << 4 | a]))
+            }
+            // RRGGBB or RRGGBBAA
+            7 | 9 => {
+                let alpha = if self.len() == 9 {
+                    let alpha = (color & 0xff) as u8;
+                    color >>= 8;
+                    alpha
+                } else {
+                    0xff
+                };
+
+                Ok(Rgba([
+                    (color >> 16) as u8,
+                    (color >> 8) as u8,
+                    color as u8,
+                    alpha,
+                ]))
+            }
+            _ => Err(ParseColorError::InvalidLength),
+        }
     }
 }
 
@@ -303,7 +330,9 @@ mod tests {
 
     #[test]
     fn to_rgba() {
-        assert_eq!("#abcdef".to_rgba().unwrap(), Rgba([0xab, 0xcd, 0xef, 0xff]));
-        assert_eq!("#abcdef00".to_rgba().unwrap(), Rgba([0xab, 0xcd, 0xef, 0x00]));
+        assert_eq!("#abcdef".to_rgba(), Ok(Rgba([0xab, 0xcd, 0xef, 0xff])));
+        assert_eq!("#abcdef00".to_rgba(), Ok(Rgba([0xab, 0xcd, 0xef, 0x00])));
+        assert_eq!("#abc".to_rgba(), Ok(Rgba([0xaa, 0xbb, 0xcc, 0xff])));
+        assert_eq!("#abcd".to_rgba(), Ok(Rgba([0xaa, 0xbb, 0xcc, 0xdd])));
     }
 }

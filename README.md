@@ -95,14 +95,16 @@ Custom the image
 
 ```bash
 silicon ./target/test.rs -o test.png \
-    --shadow-color '#555555' --background '#ffffff' \
+    --shadow-color '#555' --background '#fff' \
     --shadow-blur-radius 30 --no-window-controls
 ```
 
 Transparent background
 
+The color can be `#RGB[A]` or `#RRGGBB[AA]`
+
 ```bash
-silicon ./target/test.rs -o test.png --background '#ffffff00'
+silicon ./target/test.rs -o test.png --background '#fff0'
 ```
 
 see `silicon --help` for detail

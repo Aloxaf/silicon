@@ -9,8 +9,7 @@
 //! use silicon::formatter::ImageFormatterBuilder;
 //!
 //! let (ps, ts) = init_syntect();
-//! let code = r#"
-//! fn main() {
+//! let code = r#"fn main() {
 //!     println!("Hello, world!");
 //! }
 //! "#;
