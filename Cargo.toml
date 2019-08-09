@@ -47,6 +47,3 @@ optional = true
 [features]
 default = [ "bin" ]
 bin = [ "structopt", "env_logger", "failure" ]
-
-[profile.release]
-lto = true
