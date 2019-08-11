@@ -12,6 +12,8 @@ use syntect::easy::HighlightLines;
 use syntect::util::LinesWithEndings;
 #[cfg(target_os = "linux")]
 use {image::ImageOutputFormat, std::process::Command};
+#[cfg(target_os = "macos")]
+use {image::ImageOutputFormat, pasteboard::Pasteboard};
 
 pub mod blur;
 pub mod config;
@@ -37,7 +39,17 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
     Ok(())
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(target_os = "macos")]
+pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
+    let mut temp = tempfile::NamedTempFile::new()?;
+    image.write_to(&mut temp, ImageOutputFormat::PNG)?;
+    unsafe {
+        Pasteboard::Image.copy(temp.path().to_str().unwrap());
+    }
+    Ok(())
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 pub fn dump_image_to_clipboard(_image: &DynamicImage) -> Result<(), Error> {
     Err(format_err!(
         "This feature hasn't been implemented for your system"

@@ -20,6 +20,9 @@ conv = "0.3.3"
 euclid = "0.20"
 log = "0.4.8"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+pasteboard = "0.1.1"
+
 [lib]
 name = "silicon"
 path = "src/lib.rs"
