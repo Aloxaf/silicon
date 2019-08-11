@@ -19,6 +19,7 @@ tempfile = "3.1.0"
 conv = "0.3.3"
 euclid = "0.20"
 log = "0.4.8"
+pasteboard = "0.1.1"
 
 [lib]
 name = "silicon"
