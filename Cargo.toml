@@ -9,8 +9,15 @@ repository = "https://github.com/Aloxaf/silicon"
 license = "MIT"
 edition = "2018"
 
+[lib]
+name = "silicon"
+path = "src/lib.rs"
+
+[[bin]]
+name = "silicon"
+path = "src/bin.rs"
+
 [dependencies]
-syntect = "3.2"
 image = "0.21"
 imageproc = "0.18"
 font-kit = "0.4"
@@ -23,13 +30,10 @@ log = "0.4.8"
 [target.'cfg(target_os = "macos")'.dependencies]
 pasteboard = "0.1.1"
 
-[lib]
-name = "silicon"
-path = "src/lib.rs"
-
-[[bin]]
-name = "silicon"
-path = "src/bin.rs"
+[dependencies.syntect]
+version = "3.2"
+default-features = false
+features = ["parsing", "dump-load"]
 
 [dependencies.failure]
 version = "0.1.5"
@@ -38,15 +42,15 @@ optional = true
 [dependencies.structopt]
 version = "0.2"
 default-features = false
-features = [ "color", "wrap_help" ]
+features = ["color", "wrap_help"]
 optional = true
 
 [dependencies.env_logger]
 version = "0.6.2"
 default-features = false
-features = [ "termcolor", "atty", "humantime" ]
+features = ["termcolor", "atty", "humantime"]
 optional = true
 
 [features]
-default = [ "bin" ]
-bin = [ "structopt", "env_logger", "failure" ]
+default = ["bin"]
+bin = ["structopt", "env_logger", "failure"]
