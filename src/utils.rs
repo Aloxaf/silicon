@@ -86,7 +86,7 @@ pub(crate) fn add_window_controls(image: &mut DynamicImage) {
     ];
 
     let mut background = image.get_pixel(37, 37);
-    background.data[3] = 0;
+    background.0[3] = 0;
 
     let mut title_bar = RgbaImage::from_pixel(120 * 3, 40 * 3, background);
 
@@ -220,10 +220,12 @@ pub(crate) fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
     assert!(src.height() + y <= dst.height());
     for j in 0..src.height() {
         for i in 0..src.width() {
+            // NOTE: Undeprecate in https://github.com/image-rs/image/pull/1008
+            #[allow(deprecated)]
             unsafe {
                 let s = src.unsafe_get_pixel(i, j);
                 let mut d = dst.unsafe_get_pixel(i + x, j + y);
-                match s.data[3] {
+                match s.0[3] {
                     255 => d = s,
                     0 => (/* do nothing */),
                     _ => d.blend(&s),
