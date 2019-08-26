@@ -18,8 +18,7 @@ name = "silicon"
 path = "src/bin.rs"
 
 [dependencies]
-image = "0.21"
-imageproc = "0.18"
+imageproc = "0.19"
 font-kit = "0.4"
 clipboard = "0.5.0"
 tempfile = "3.1.0"
@@ -29,6 +28,11 @@ log = "0.4.8"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 pasteboard = "0.1.1"
+
+[dependencies.image]
+version = "0.22"
+default-features = false
+features = ["jpeg", "png_codec", "jpeg_rayon"]
 
 [dependencies.syntect]
 version = "3.2"

@@ -223,7 +223,7 @@ impl ImageFormatter {
     }
 
     fn draw_line_number(&self, image: &mut DynamicImage, lineno: u32, mut color: Rgba<u8>) {
-        for i in color.data.iter_mut() {
+        for i in color.0.iter_mut() {
             *i = (*i).saturating_sub(20);
         }
         for i in 0..=lineno {
@@ -244,7 +244,7 @@ impl ImageFormatter {
         let height = self.font.get_font_height() + self.line_pad;
         let mut color = image.get_pixel(20, 20);
 
-        for i in color.data.iter_mut() {
+        for i in color.0.iter_mut() {
             *i = (*i).saturating_add(40);
         }
 
