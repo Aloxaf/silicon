@@ -44,7 +44,7 @@ version = "0.1.5"
 optional = true
 
 [dependencies.structopt]
-version = "0.2"
+version = "0.3"
 default-features = false
 features = ["color", "wrap_help"]
 optional = true
