@@ -16,7 +16,7 @@ fn parse_str_color(s: &str) -> Result<Rgba<u8>, Error> {
         .map_err(|_| format_err!("Invalid color: `{}`", s))?)
 }
 
-fn parse_font_str(s: &str) -> Vec<(String, f32)> {
+fn parse_font_str(s: &str) -> Option<Vec<(String, f32)>> {
     let mut result = vec![];
     for font in s.split(';') {
         let tmp = font.split('=').collect::<Vec<_>>();
@@ -27,10 +27,10 @@ fn parse_font_str(s: &str) -> Vec<(String, f32)> {
             .unwrap_or(26.0);
         result.push((font_name, font_size));
     }
-    result
+    Some(result)
 }
 
-fn parse_line_range(s: &str) -> Result<Vec<u32>, ParseIntError> {
+fn parse_line_range(s: &str) -> Result<Option<Vec<u32>>, ParseIntError> {
     let mut result = vec![];
     for range in s.split(';') {
         let range: Vec<u32> = range
@@ -45,7 +45,7 @@ fn parse_line_range(s: &str) -> Result<Vec<u32>, ParseIntError> {
             }
         }
     }
-    Ok(result)
+    Ok(Some(result))
 }
 
 #[derive(StructOpt, Debug)]
@@ -57,7 +57,7 @@ pub struct Config {
         short,
         value_name = "COLOR",
         default_value = "#aaaaff",
-        parse(try_from_str = "parse_str_color")
+        parse(try_from_str = parse_str_color)
     )]
     pub background: Rgba<u8>,
 
@@ -70,11 +70,11 @@ pub struct Config {
     pub file: Option<PathBuf>,
 
     /// The font list. eg. 'Hack; SimSun=31'
-    #[structopt(long, short, value_name = "FONT", parse(from_str = "parse_font_str"))]
+    #[structopt(long, short, value_name = "FONT", parse(from_str = parse_font_str))]
     pub font: Option<Vec<(String, f32)>>,
 
     /// Lines to high light. rg. '1-3; 4'
-    #[structopt(long, value_name = "LINES", parse(try_from_str = "parse_line_range"))]
+    #[structopt(long, value_name = "LINES", parse(try_from_str = parse_line_range))]
     pub highlight_lines: Option<Vec<u32>>,
 
     /// The language for syntax highlighting. You can use full name ("Rust") or file extension ("rs").
@@ -94,7 +94,7 @@ pub struct Config {
         short,
         long,
         value_name = "PATH",
-        raw(required_unless_one = r#"&["list-themes", "to-clipboard"]"#)
+        required_unless_one = &["list-themes", "to-clipboard"]
     )]
     pub output: Option<PathBuf>,
 
@@ -123,7 +123,7 @@ pub struct Config {
         long,
         value_name = "COLOR",
         default_value = "#555555",
-        parse(try_from_str = "parse_str_color")
+        parse(try_from_str = parse_str_color)
     )]
     pub shadow_color: Rgba<u8>,
 
