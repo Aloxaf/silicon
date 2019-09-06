@@ -164,6 +164,11 @@ impl Config {
         &self,
         ps: &'a SyntaxSet,
     ) -> Result<(&'a SyntaxReference, String), Error> {
+        let possible_language = self.language.as_ref().map(|language| {
+            ps.find_syntax_by_token(language)
+                .ok_or_else(|| format_err!("Unsupported language: {}", language))
+        });
+
         if self.from_clipboard {
             let mut ctx = ClipboardContext::new()
                 .map_err(|e| format_err!("failed to access clipboard: {}", e))?;
@@ -171,13 +176,11 @@ impl Config {
                 .get_contents()
                 .map_err(|e| format_err!("failed to access clipboard: {}", e))?;
 
-            let language = if let Some(language) = &self.language {
-                ps.find_syntax_by_token(language)
-                    .ok_or_else(|| format_err!("Unsupported language: {}", language))?
-            } else {
+            let language = possible_language.unwrap_or_else(|| {
                 ps.find_syntax_by_first_line(&code)
-                    .ok_or_else(|| format_err!("Failed to detect the language"))?
-            };
+                    .ok_or_else(|| format_err!("Failed to detect the language"))
+            })?;
+
             return Ok((language, code));
         }
 
@@ -186,13 +189,10 @@ impl Config {
             let mut file = File::open(path)?;
             file.read_to_string(&mut s)?;
 
-            let language = if let Some(language) = &self.language {
-                ps.find_syntax_by_token(language)
-                    .ok_or_else(|| format_err!("Unsupported language: {}", language))?
-            } else {
+            let language = possible_language.unwrap_or_else(|| {
                 ps.find_syntax_for_file(path)?
-                    .ok_or_else(|| format_err!("Failed to detect the language"))?
-            };
+                    .ok_or_else(|| format_err!("Failed to detect the language"))
+            })?;
 
             return Ok((language, s));
         }
@@ -201,13 +201,10 @@ impl Config {
         let mut s = String::new();
         stdin.read_to_string(&mut s)?;
 
-        let language = if let Some(language) = &self.language {
-            ps.find_syntax_by_token(language)
-                .ok_or_else(|| format_err!("Unsupported language: {}", language))?
-        } else {
+        let language = possible_language.unwrap_or_else(|| {
             ps.find_syntax_by_first_line(&s)
-                .ok_or_else(|| format_err!("Failed to detect the language"))?
-        };
+                .ok_or_else(|| format_err!("Failed to detect the language"))
+        })?;
 
         Ok((language, s))
     }
