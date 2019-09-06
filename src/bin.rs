@@ -10,10 +10,10 @@ use image::DynamicImage;
 use structopt::StructOpt;
 use syntect::easy::HighlightLines;
 use syntect::util::LinesWithEndings;
-#[cfg(target_os = "linux")]
-use {image::ImageOutputFormat, std::process::Command};
 #[cfg(target_os = "macos")]
 use {image::ImageOutputFormat, pasteboard::Pasteboard};
+#[cfg(target_os = "linux")]
+use {image::ImageOutputFormat, std::process::Command};
 
 pub mod blur;
 pub mod config;
@@ -84,9 +84,9 @@ fn run() -> Result<(), Error> {
     if config.to_clipboard {
         dump_image_to_clipboard(&image)?;
     } else {
-        let path = &config.output.unwrap();
+        let path = config.get_expanded_output().unwrap();
         image
-            .save(path)
+            .save(&path)
             .map_err(|e| format_err!("Failed to save image to {}: {}", path.display(), e))?;
     }
 

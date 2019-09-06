@@ -16,7 +16,7 @@ fn parse_str_color(s: &str) -> Result<Rgba<u8>, Error> {
         .map_err(|_| format_err!("Invalid color: `{}`", s))?)
 }
 
-fn parse_font_str(s: &str) -> Option<Vec<(String, f32)>> {
+fn parse_font_str(s: &str) -> Vec<(String, f32)> {
     let mut result = vec![];
     for font in s.split(';') {
         let tmp = font.split('=').collect::<Vec<_>>();
@@ -27,10 +27,10 @@ fn parse_font_str(s: &str) -> Option<Vec<(String, f32)>> {
             .unwrap_or(26.0);
         result.push((font_name, font_size));
     }
-    Some(result)
+    result
 }
 
-fn parse_line_range(s: &str) -> Result<Option<Vec<u32>>, ParseIntError> {
+fn parse_line_range(s: &str) -> Result<Vec<u32>, ParseIntError> {
     let mut result = vec![];
     for range in s.split(';') {
         let range: Vec<u32> = range
@@ -45,11 +45,15 @@ fn parse_line_range(s: &str) -> Result<Option<Vec<u32>>, ParseIntError> {
             }
         }
     }
-    Ok(Some(result))
+    Ok(result)
 }
 
+// https://github.com/TeXitoi/structopt/blob/master/CHANGELOG.md#support-optional-vectors-of-arguments-for-distinguishing-between--o-1-2--o-and-no-option-provided-at-all-by-sphynx-180
+type FontList = Vec<(String, f32)>;
+type Lines = Vec<u32>;
+
 #[derive(StructOpt, Debug)]
-#[structopt(name = "silicon", rename_all = "kebab")]
+#[structopt(name = "silicon")]
 pub struct Config {
     /// Background color of the image
     #[structopt(
@@ -71,11 +75,11 @@ pub struct Config {
 
     /// The font list. eg. 'Hack; SimSun=31'
     #[structopt(long, short, value_name = "FONT", parse(from_str = parse_font_str))]
-    pub font: Option<Vec<(String, f32)>>,
+    pub font: Option<FontList>,
 
     /// Lines to high light. rg. '1-3; 4'
     #[structopt(long, value_name = "LINES", parse(try_from_str = parse_line_range))]
-    pub highlight_lines: Option<Vec<u32>>,
+    pub highlight_lines: Option<Lines>,
 
     /// The language for syntax highlighting. You can use full name ("Rust") or file extension ("rs").
     #[structopt(short, value_name = "LANG", long)]
@@ -240,5 +244,17 @@ impl Config {
             .pad_vert(self.pad_vert)
             .offset_x(self.shadow_offset_x)
             .offset_y(self.shadow_offset_y)
+    }
+
+    pub fn get_expanded_output(&self) -> Option<PathBuf> {
+        let need_expand = self.output.as_ref().map(|p| p.starts_with("~")) == Some(true);
+
+        if let (Ok(home_dir), true) = (std::env::var("HOME"), need_expand) {
+            self.output
+                .as_ref()
+                .map(|p| p.to_string_lossy().replacen("~", &home_dir, 1).into())
+        } else {
+            self.output.clone()
+        }
     }
 }
