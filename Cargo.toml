@@ -40,7 +40,7 @@ default-features = false
 features = ["parsing", "dump-load"]
 
 [dependencies.failure]
-version = "0.1.5"
+version = "0.1.6"
 optional = true
 
 [dependencies.structopt]
