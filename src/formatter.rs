@@ -256,7 +256,7 @@ impl ImageFormatter {
         }
     }
 
-    // TODO: &mut ?
+    // TODO: use &T instead of &mut T ?
     pub fn format(&mut self, v: &[Vec<(Style, &str)>], theme: &Theme) -> DynamicImage {
         if self.line_number {
             self.line_number_chars = ((v.len() as f32).log10() + 1.0).floor() as u32;

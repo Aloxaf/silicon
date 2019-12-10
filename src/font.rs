@@ -223,7 +223,7 @@ impl FontCollection {
                         )
                         .unwrap();
                     let x = delta_x as i32 + raster_rect.origin.x;
-                    let y = height as i32 - raster_rect.size.height - raster_rect.origin.y;
+                    let y = height as i32 + raster_rect.origin.y;
                     delta_x += Self::get_glyph_width(font, id, imfont.size);
 
                     PositionedGlyph {
@@ -301,11 +301,7 @@ impl PositionedGlyph {
     fn draw<O: FnMut(i32, i32, f32)>(&self, offset: i32, mut o: O) {
         let mut canvas = Canvas::new(&self.raster_rect.size.to_u32(), Format::A8);
 
-        let origin = Point2D::new(
-            -self.raster_rect.origin.x,
-            self.raster_rect.size.height + self.raster_rect.origin.y,
-        )
-        .to_f32();
+        let origin = Point2D::new(-self.raster_rect.origin.x, -self.raster_rect.origin.y).to_f32();
 
         // don't rasterize whitespace(https://github.com/pcwalton/font-kit/issues/7)
         if canvas.size != Size2D::new(0, 0) {
