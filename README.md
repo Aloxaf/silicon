@@ -35,16 +35,6 @@ It's not as beautiful as Carbon...
 
 ```bash
 cargo install silicon
-
-# or the latest version (Linux/macOS)
-
-cargo install --git https://github.com/Aloxaf/silicon
-
-# for Windows (see #11)
-
-git clone --single-branch --branch dev https://github.com/Aloxaf/silicon
-cd silicon
-cargo build --release
 ```
 
 ### AUR
