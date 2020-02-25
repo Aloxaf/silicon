@@ -51,6 +51,13 @@ pikaur -S silicon
 
 ## Dependencies
 
+### Ubuntu
+```bash
+ sudo apt install expat
+ sudo apt install libxml2-dev
+ sudo apt install pkg-config libasound2-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb-composite0-dev
+```
+
 ### Arch Linux
 
 ```bash
