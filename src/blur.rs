@@ -347,7 +347,7 @@ fn box_blur_horz(
 ///
 /// Source: https://stackoverflow.com/a/42386149/585725
 fn round(mut x: f32) -> f32 {
-    x += 12582912.0;
-    x -= 12582912.0;
+    x += 12_582_912.0;
+    x -= 12_582_912.0;
     x
 }

@@ -25,7 +25,7 @@ pub mod utils;
 #[cfg(target_os = "linux")]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
     let mut temp = tempfile::NamedTempFile::new()?;
-    image.write_to(&mut temp, ImageOutputFormat::PNG)?;
+    image.write_to(&mut temp, ImageOutputFormat::Png)?;
     Command::new("xclip")
         .args(&[
             "-sel",
@@ -42,7 +42,7 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
 #[cfg(target_os = "macos")]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
     let mut temp = tempfile::NamedTempFile::new()?;
-    image.write_to(&mut temp, ImageOutputFormat::PNG)?;
+    image.write_to(&mut temp, ImageOutputFormat::Png)?;
     unsafe {
         Pasteboard::Image.copy(temp.path().to_str().unwrap());
     }

@@ -1,7 +1,7 @@
 use crate::error::ParseColorError;
-use image::imageops::{crop, resize};
+use image::imageops::{crop, resize, FilterType};
 use image::Pixel;
-use image::{DynamicImage, FilterType, GenericImage, GenericImageView, Rgba, RgbaImage};
+use image::{DynamicImage, GenericImage, GenericImageView, Rgba, RgbaImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut};
 use imageproc::rect::Rect;
 use syntect::dumps;
@@ -257,16 +257,18 @@ pub(crate) fn round_corner(image: &mut DynamicImage, radius: u32) {
     );
 
     let part = crop(&mut circle, 0, 0, radius, radius);
-    image.copy_from(&part, 0, 0);
+    image.copy_from(&part, 0, 0).unwrap();
 
     let part = crop(&mut circle, radius + 1, 0, radius, radius);
-    image.copy_from(&part, width - radius, 0);
+    image.copy_from(&part, width - radius, 0).unwrap();
 
     let part = crop(&mut circle, 0, radius + 1, radius, radius);
-    image.copy_from(&part, 0, height - radius);
+    image.copy_from(&part, 0, height - radius).unwrap();
 
     let part = crop(&mut circle, radius + 1, radius + 1, radius, radius);
-    image.copy_from(&part, width - radius, height - radius);
+    image
+        .copy_from(&part, width - radius, height - radius)
+        .unwrap();
 }
 
 // `draw_filled_circle_mut` doesn't work well with small radius in imageproc v0.18.0
