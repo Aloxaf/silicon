@@ -7,6 +7,7 @@ use crate::config::Config;
 use crate::utils::*;
 use failure::Error;
 use image::DynamicImage;
+use std::fs;
 use structopt::StructOpt;
 use syntect::easy::HighlightLines;
 use syntect::util::LinesWithEndings;
@@ -85,6 +86,19 @@ fn run() -> Result<(), Error> {
         dump_image_to_clipboard(&image)?;
     } else {
         let path = config.get_expanded_output().unwrap();
+
+        if let Some(parent) = path.parent() {
+            if !parent.is_dir() {
+                fs::create_dir_all(parent).map_err(|e| {
+                    format_err!(
+                        "Failed to create parent directories for path {}: {}",
+                        path.display(),
+                        e
+                    )
+                })?;
+            }
+        }
+
         image
             .save(&path)
             .map_err(|e| format_err!("Failed to save image to {}: {}", path.display(), e))?;
