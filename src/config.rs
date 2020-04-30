@@ -222,12 +222,12 @@ impl Config {
             .line_pad(self.line_pad)
             .window_controls(!self.no_window_controls)
             .line_number(!self.no_line_number)
-            .font(self.font.clone().unwrap_or_else(|| vec![]))
+            .font(self.font.clone().unwrap_or_default())
             .round_corner(!self.no_round_corner)
             .window_controls(!self.no_window_controls)
             .shadow_adder(self.get_shadow_adder())
             .tab_width(self.tab_width)
-            .highlight_lines(self.highlight_lines.clone().unwrap_or_else(|| vec![]));
+            .highlight_lines(self.highlight_lines.clone().unwrap_or_default());
 
         Ok(formatter.build()?)
     }
