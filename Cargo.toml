@@ -19,7 +19,7 @@ path = "src/bin.rs"
 
 [dependencies]
 imageproc = "0.20"
-font-kit = "0.5"
+font-kit = "0.6"
 clipboard = "0.5.0"
 tempfile = "3.1.0"
 conv = "0.3.3"
