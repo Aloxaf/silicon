@@ -14,6 +14,8 @@ use syntect::util::LinesWithEndings;
 use {image::ImageOutputFormat, pasteboard::Pasteboard};
 #[cfg(target_os = "linux")]
 use {image::ImageOutputFormat, std::process::Command};
+#[cfg(target_os = "windows")]
+use {image::ImageOutputFormat, clipboard_win::{set_clipboard, formats::RawData}};
 
 pub mod blur;
 pub mod config;
@@ -49,7 +51,16 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
     Ok(())
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+#[cfg(target_os = "windows")]
+pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
+    let mut temp: Vec<u8> = Vec::new();
+    image.write_to(&mut temp, ImageOutputFormat::Png)?;
+    set_clipboard(RawData(49488), &temp)
+        .map_err(|e| format_err!("Failed to access clipboard {}", e))?;
+    Ok(())
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 pub fn dump_image_to_clipboard(_image: &DynamicImage) -> Result<(), Error> {
     Err(format_err!(
         "This feature hasn't been implemented for your system"
