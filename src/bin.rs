@@ -10,12 +10,15 @@ use image::DynamicImage;
 use structopt::StructOpt;
 use syntect::easy::HighlightLines;
 use syntect::util::LinesWithEndings;
+#[cfg(target_os = "windows")]
+use {
+    clipboard_win::{formats::RawData, set_clipboard},
+    image::ImageOutputFormat,
+};
 #[cfg(target_os = "macos")]
 use {image::ImageOutputFormat, pasteboard::Pasteboard};
 #[cfg(target_os = "linux")]
 use {image::ImageOutputFormat, std::process::Command};
-#[cfg(target_os = "windows")]
-use {image::ImageOutputFormat, clipboard_win::{set_clipboard, formats::RawData}};
 
 pub mod blur;
 pub mod config;
