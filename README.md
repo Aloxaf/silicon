@@ -49,6 +49,14 @@ eg.
 pikaur -S silicon
 ```
 
+### Homebrew
+
+You can install Silicon using [Homebrew](https://brew.sh):
+
+```bash
+brew install silicon
+```
+
 ## Dependencies
 
 ### Ubuntu
