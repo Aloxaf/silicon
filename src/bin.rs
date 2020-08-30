@@ -12,7 +12,7 @@ use syntect::easy::HighlightLines;
 use syntect::util::LinesWithEndings;
 #[cfg(target_os = "windows")]
 use {
-    clipboard_win::{formats::RawData, set_clipboard},
+    clipboard_win::{formats, Clipboard, Setter},
     image::ImageOutputFormat,
 };
 #[cfg(target_os = "macos")]
@@ -57,9 +57,19 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
 #[cfg(target_os = "windows")]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
     let mut temp: Vec<u8> = Vec::new();
-    image.write_to(&mut temp, ImageOutputFormat::Png)?;
-    set_clipboard(RawData(49488), &temp)
-        .map_err(|e| format_err!("Failed to access clipboard {}", e))?;
+
+    // Convert the image to RGB without alpha because the clipboard
+    // of windows doesn't support it.
+    let image = DynamicImage::ImageRgb8(image.to_rgb());
+
+    image.write_to(&mut temp, ImageOutputFormat::Bmp)?;
+
+    let _clip =
+        Clipboard::new_attempts(10).map_err(|e| format_err!("Couldn't open clipboard: {}", e));
+
+    formats::Bitmap
+        .write_clipboard(&temp)
+        .map_err(|e| format_err!("Failed copy image: {}", e));
     Ok(())
 }
 
