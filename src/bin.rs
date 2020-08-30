@@ -65,11 +65,11 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
     image.write_to(&mut temp, ImageOutputFormat::Bmp)?;
 
     let _clip =
-        Clipboard::new_attempts(10).map_err(|e| format_err!("Couldn't open clipboard: {}", e));
+        Clipboard::new_attempts(10).map_err(|e| format_err!("Couldn't open clipboard: {}", e))?;
 
     formats::Bitmap
         .write_clipboard(&temp)
-        .map_err(|e| format_err!("Failed copy image: {}", e));
+        .map_err(|e| format_err!("Failed copy image: {}", e))?;
     Ok(())
 }
 
