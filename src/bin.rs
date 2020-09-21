@@ -1,11 +1,11 @@
 #[macro_use]
 extern crate log;
 #[macro_use]
-extern crate failure;
+extern crate anyhow;
 
 use crate::config::Config;
 use crate::utils::*;
-use failure::Error;
+use anyhow::Error;
 use image::DynamicImage;
 use structopt::StructOpt;
 use syntect::easy::HighlightLines;
