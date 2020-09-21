@@ -28,6 +28,9 @@ jobs:
           components: rustfmt, clippy
           override: true
 
+      - name: APT update
+        run: sudo apt-get update
+
       - name: Install dependencies
         run: sudo apt-get install libx11-xcb-dev libxcb-shape0-dev libxcb-xfixes0-dev
 
