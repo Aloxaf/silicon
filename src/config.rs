@@ -1,7 +1,7 @@
 use crate::formatter::{ImageFormatter, ImageFormatterBuilder};
 use crate::utils::{ShadowAdder, ToRgba};
-use clipboard::{ClipboardContext, ClipboardProvider};
 use anyhow::Error;
+use clipboard::{ClipboardContext, ClipboardProvider};
 use image::Rgba;
 use std::fs::File;
 use std::io::{stdin, Read};
