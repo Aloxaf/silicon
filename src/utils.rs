@@ -111,10 +111,31 @@ pub(crate) fn add_window_controls(image: &mut DynamicImage) {
     copy_alpha(&title_bar, image.as_mut_rgba8().unwrap(), 15, 15);
 }
 
+#[derive(Clone, Debug)]
+pub enum Background {
+    Solid(Rgba<u8>),
+    Image(RgbaImage),
+}
+
+impl Default for Background {
+    fn default() -> Self {
+        Self::Solid("#abb8c3".to_rgba().unwrap())
+    }
+}
+
+impl Background {
+    fn to_image(&self, width: u32, height: u32) -> RgbaImage {
+        match self {
+            Background::Solid(color) => RgbaImage::from_pixel(width, height, color.to_owned()),
+            Background::Image(image) => resize(image, width, height, FilterType::Triangle),
+        }
+    }
+}
+
 /// Add the shadow for image
 #[derive(Debug)]
 pub struct ShadowAdder {
-    background: Rgba<u8>,
+    background: Background,
     shadow_color: Rgba<u8>,
     blur_radius: f32,
     pad_horiz: u32,
@@ -126,7 +147,7 @@ pub struct ShadowAdder {
 impl ShadowAdder {
     pub fn new() -> Self {
         Self {
-            background: "#abb8c3".to_rgba().unwrap(),
+            background: Background::default(),
             shadow_color: "#707070".to_rgba().unwrap(),
             blur_radius: 50.0,
             pad_horiz: 80,
@@ -137,8 +158,8 @@ impl ShadowAdder {
     }
 
     /// Set the background color
-    pub fn background(mut self, color: Rgba<u8>) -> Self {
-        self.background = color;
+    pub fn background(mut self, bg: Background) -> Self {
+        self.background = bg;
         self
     }
 
@@ -180,8 +201,7 @@ impl ShadowAdder {
         let height = image.height() + self.pad_vert * 2;
 
         // create the shadow
-        let mut shadow = RgbaImage::from_pixel(width, height, self.background);
-
+        let mut shadow = self.background.to_image(width, height);
         if self.blur_radius > 0.0 {
             let rect = Rect::at(
                 self.pad_horiz as i32 + self.offset_x,

@@ -1,5 +1,5 @@
 use crate::formatter::{ImageFormatter, ImageFormatterBuilder};
-use crate::utils::{ShadowAdder, ToRgba};
+use crate::utils::{Background, ShadowAdder, ToRgba};
 use anyhow::Error;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use image::Rgba;
@@ -55,6 +55,9 @@ type Lines = Vec<u32>;
 #[derive(StructOpt, Debug)]
 #[structopt(name = "silicon")]
 pub struct Config {
+    /// Background image
+    #[structopt(long, conflicts_with = "background")]
+    pub background_image: Option<PathBuf>,
     /// Background color of the image
     #[structopt(
         long,
@@ -234,7 +237,10 @@ impl Config {
 
     pub fn get_shadow_adder(&self) -> ShadowAdder {
         ShadowAdder::new()
-            .background(self.background)
+            .background(match &self.background_image {
+                Some(path) => Background::Image(image::open(path).unwrap().to_rgba()),
+                None => Background::Solid(self.background),
+            })
             .shadow_color(self.shadow_color)
             .blur_radius(self.shadow_blur_radius)
             .pad_horiz(self.pad_horiz)
