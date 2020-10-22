@@ -21,7 +21,7 @@ But it is a web application, which brings the following disadvantages:
  - Cannot work without Internet & browser.
  - Doesn't work well with shell. (Although there is _carbon-now-cli_, its experience is not very good, especially when the network is not so good.)
 
-However, Silicon doesn't have these problem.
+However, Silicon doesn't have these problems.
 It's is implemented in Rust and can work without browser & Internet.
 
 Silicon can render your source code on the fly while _carbon-now-cli_ takes several seconds on it.
