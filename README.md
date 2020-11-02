@@ -115,3 +115,9 @@ silicon ./target/test.rs -o test.png --background '#fff0'
 ```
 
 see `silicon --help` for detail
+
+## Adding new syntaxes / themes
+
+Silicon reads syntax-definition and theme cache from bat's cache directory. 
+
+You can find the steps to add new syntaxes / themes for bat here: [sharkdp/bat#adding-new-syntaxes--language-definitions](https://github.com/sharkdp/bat#adding-new-syntaxes--language-definitions).

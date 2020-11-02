@@ -18,6 +18,7 @@ name = "silicon"
 path = "src/bin.rs"
 
 [dependencies]
+dirs = "3.0"
 imageproc = "0.21"
 font-kit = "0.10"
 clipboard = "0.5.0"
