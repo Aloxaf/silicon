@@ -55,7 +55,7 @@ features = ["color", "wrap_help"]
 optional = true
 
 [dependencies.env_logger]
-version = "0.7.1"
+version = "0.8.1"
 default-features = false
 features = ["termcolor", "atty", "humantime"]
 optional = true
