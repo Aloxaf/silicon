@@ -1,6 +1,6 @@
 use crate::formatter::{ImageFormatter, ImageFormatterBuilder};
 use crate::utils::{Background, ShadowAdder, ToRgba};
-use anyhow::Error;
+use anyhow::{Context, Error};
 use clipboard::{ClipboardContext, ClipboardProvider};
 use image::Rgba;
 use std::fs::File;
@@ -216,7 +216,8 @@ impl Config {
         if let Some(theme) = ts.themes.get(&self.theme) {
             Ok(theme.clone())
         } else {
-            Ok(ThemeSet::get_theme(&self.theme)?)
+            ThemeSet::get_theme(&self.theme)
+                .context(format!("Canot load the theme: {}", self.theme))
         }
     }
 
