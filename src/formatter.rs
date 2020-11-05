@@ -239,7 +239,7 @@ impl ImageFormatter {
         }
     }
 
-    fn highlight_lines(&self, image: &mut DynamicImage, lines: &[u32]) {
+    fn highlight_lines<I: IntoIterator<Item = u32>>(&self, image: &mut DynamicImage, lines: I) {
         let width = image.width();
         let height = self.font.get_font_height() + self.line_pad;
         let mut color = image.get_pixel(20, 20);
@@ -251,7 +251,7 @@ impl ImageFormatter {
         let shadow = RgbaImage::from_pixel(width, height, color);
 
         for i in lines {
-            let y = self.get_line_y(*i - 1);
+            let y = self.get_line_y(i - 1);
             copy_alpha(&shadow, image.as_mut_rgba8().unwrap(), 0, y);
         }
     }
@@ -278,7 +278,12 @@ impl ImageFormatter {
         let mut image = DynamicImage::ImageRgba8(RgbaImage::from_pixel(size.0, size.1, background));
 
         if !self.highlight_lines.is_empty() {
-            self.highlight_lines(&mut image, &self.highlight_lines);
+            let highlight_lines = self
+                .highlight_lines
+                .iter()
+                .cloned()
+                .filter(|&n| n >= 1 && n <= drawables.max_lineno + 1);
+            self.highlight_lines(&mut image, highlight_lines);
         }
         if self.line_number {
             self.draw_line_number(&mut image, drawables.max_lineno, foreground);
