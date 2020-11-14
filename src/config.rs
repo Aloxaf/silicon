@@ -92,6 +92,10 @@ pub struct Config {
     #[structopt(long, value_name = "PAD", default_value = "2")]
     pub line_pad: u32,
 
+    /// Line number offset
+    #[structopt(long, value_name = "OFFSET", default_value = "1")]
+    pub line_offset: u32,
+
     /// List all themes.
     #[structopt(long)]
     pub list_themes: bool,
@@ -231,7 +235,8 @@ impl Config {
             .window_controls(!self.no_window_controls)
             .shadow_adder(self.get_shadow_adder()?)
             .tab_width(self.tab_width)
-            .highlight_lines(self.highlight_lines.clone().unwrap_or_default());
+            .highlight_lines(self.highlight_lines.clone().unwrap_or_default())
+            .line_offset(self.line_offset);
 
         Ok(formatter.build()?)
     }

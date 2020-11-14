@@ -36,6 +36,8 @@ pub struct ImageFormatter {
     shadow_adder: Option<ShadowAdder>,
     /// Tab width
     tab_width: u8,
+    /// Line Offset
+    line_offset: u32,
 }
 
 #[derive(Default)]
@@ -56,6 +58,8 @@ pub struct ImageFormatterBuilder<S> {
     shadow_adder: Option<ShadowAdder>,
     /// Tab width
     tab_width: u8,
+    /// Line Offset
+    line_offset: u32,
 }
 
 // FIXME: cannot use `ImageFormatterBuilder::new().build()` bacuse cannot infer type for `S`
@@ -74,6 +78,12 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
     /// Whether show the line number
     pub fn line_number(mut self, show: bool) -> Self {
         self.line_number = show;
+        self
+    }
+
+    /// Set Line offset
+    pub fn line_offset(mut self, offset: u32) -> Self {
+        self.line_offset = offset;
         self
     }
 
@@ -140,6 +150,7 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             tab_width: self.tab_width,
             code_pad_top,
             font,
+            line_offset: self.line_offset,
         })
     }
 }
@@ -227,7 +238,11 @@ impl ImageFormatter {
             *i = (*i).saturating_sub(20);
         }
         for i in 0..=lineno {
-            let line_mumber = format!("{:>width$}", i + 1, width = self.line_number_chars as usize);
+            let line_mumber = format!(
+                "{:>width$}",
+                i + self.line_offset,
+                width = self.line_number_chars as usize
+            );
             self.font.draw_text_mut(
                 image,
                 color,
@@ -259,7 +274,8 @@ impl ImageFormatter {
     // TODO: use &T instead of &mut T ?
     pub fn format(&mut self, v: &[Vec<(Style, &str)>], theme: &Theme) -> DynamicImage {
         if self.line_number {
-            self.line_number_chars = ((v.len() as f32).log10() + 1.0).floor() as u32;
+            self.line_number_chars =
+                (((v.len() + self.line_offset as usize) as f32).log10() + 1.0).floor() as u32;
         } else {
             self.line_number_chars = 0;
             self.line_number_pad = 0;
