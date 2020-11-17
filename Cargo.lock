@@ -632,9 +632,9 @@ dependencies = [
 
 [[package]]
 name = "imageproc"
-version = "0.21.0"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b0fbd0ced24e3bc65052406fa6466203fe9c8d1990a3327567433e47109ed1a"
+checksum = "7923654f3ce7cb6849d5dc9e544aaeab49c508a90b56c721b046e7234c74ab53"
 dependencies = [
  "conv",
  "image",
