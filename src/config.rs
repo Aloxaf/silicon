@@ -56,8 +56,9 @@ type Lines = Vec<u32>;
 #[structopt(name = "silicon")]
 pub struct Config {
     /// Background image
-    #[structopt(long, conflicts_with = "background")]
+    #[structopt(long, value_name = "IMAGE", conflicts_with = "background")]
     pub background_image: Option<PathBuf>,
+
     /// Background color of the image
     #[structopt(
         long,
@@ -76,7 +77,7 @@ pub struct Config {
     #[structopt(value_name = "FILE", parse(from_os_str))]
     pub file: Option<PathBuf>,
 
-    /// The font list. eg. 'Hack; SimSun=31'
+    /// The fallback font list. eg. 'Hack; SimSun=31'
     #[structopt(long, short, value_name = "FONT", parse(from_str = parse_font_str))]
     pub font: Option<FontList>,
 
@@ -100,12 +101,16 @@ pub struct Config {
     #[structopt(long)]
     pub list_themes: bool,
 
+    /// List all available fonts in your system
+    #[structopt(long)]
+    pub list_fonts: bool,
+
     /// Write output image to specific location instead of cwd.
     #[structopt(
         short,
         long,
         value_name = "PATH",
-        required_unless_one = &["list-themes", "to-clipboard"]
+        required_unless_one = &["list-fonts", "list-themes", "to-clipboard"]
     )]
     pub output: Option<PathBuf>,
 

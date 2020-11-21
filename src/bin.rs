@@ -90,6 +90,12 @@ fn run() -> Result<(), Error> {
             println!("{}", i);
         }
         return Ok(());
+    } else if config.list_fonts {
+        let source = font_kit::source::SystemSource::new();
+        for font in source.all_families().unwrap_or_default() {
+            println!("{}", font);
+        }
+        return Ok(());
     }
 
     let (syntax, code) = config.get_source_code(&ps)?;
