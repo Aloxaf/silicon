@@ -61,9 +61,9 @@ brew install silicon
 
 ### Ubuntu
 ```bash
- sudo apt install expat
- sudo apt install libxml2-dev
- sudo apt install pkg-config libasound2-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb-composite0-dev
+sudo apt install expat
+sudo apt install libxml2-dev
+sudo apt install pkg-config libasound2-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb-composite0-dev
 ```
 
 ### Arch Linux
@@ -80,16 +80,20 @@ Read code from file
 silicon main.rs -o main.png 
 ```
 
-Read code from clipboard, and copy the result image to clipboard(`--to-clipboard` is only available on Linux)
+Read code from clipboard, and copy the result image to clipboard
 
 ```bash
 silicon --from-clipboard -l rs --to-clipboard
 ```
 
-Use multiple fonts
+Specify a fallback font list and their size
 
 ```bash
-silicon main.rs -o main.png -f 'Hack; SimSun'
+silicon -o main.png -l bash -f 'Hack; SimSun=31; code2000' <<EOF
+echo Hello
+echo 你好
+echo ∠( ᐛ 」∠)＿
+EOF
 ```
 
 Highlight specified line
