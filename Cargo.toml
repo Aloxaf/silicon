@@ -1,6 +1,6 @@
 [package]
 name = "silicon"
-version = "0.3.2"
+version = "0.4.0"
 description = "Create beautiful image of your code"
 authors = ["Aloxaf <aloxafx@gmail.com>"]
 categories = ["command-line-utilities"]
@@ -19,7 +19,7 @@ path = "src/bin.rs"
 
 [dependencies]
 dirs = "3.0"
-imageproc = "0.21"
+imageproc = "0.22.0"
 font-kit = "0.10"
 clipboard = "0.5.0"
 tempfile = "3.1.0"
@@ -55,7 +55,7 @@ features = ["color", "wrap_help"]
 optional = true
 
 [dependencies.env_logger]
-version = "0.7.1"
+version = "0.8.2"
 default-features = false
 features = ["termcolor", "atty", "humantime"]
 optional = true

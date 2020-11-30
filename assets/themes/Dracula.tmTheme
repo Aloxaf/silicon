@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Dracula Theme v1.4.2
+<!-- Dracula Theme v1.4.3
 #
 # https://github.com/dracula/sublime
 #
@@ -25,6 +25,8 @@
 				<string>#282a36</string>
 				<key>caret</key>
 				<string>#f8f8f0</string>
+				<key>block_caret</key>
+				<string>#999a9e</string>
 				<key>foreground</key>
 				<string>#f8f8f2</string>
 				<key>invisibles</key>
