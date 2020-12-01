@@ -249,7 +249,7 @@ impl Config {
     pub fn get_shadow_adder(&self) -> Result<ShadowAdder, Error> {
         Ok(ShadowAdder::new()
             .background(match &self.background_image {
-                Some(path) => Background::Image(image::open(path)?.to_rgba()),
+                Some(path) => Background::Image(image::open(path)?.to_rgba8()),
                 None => Background::Solid(self.background),
             })
             .shadow_color(self.shadow_color)
