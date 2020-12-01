@@ -97,8 +97,10 @@ impl ImageFont {
     pub fn new(name: &str, size: f32) -> Result<Self, FontError> {
         // Silicon already contains Hack font
         if name == "Hack" {
-            let mut font = Self::default();
-            font.size = size;
+            let font = ImageFont {
+                size,
+                ..Default::default()
+            };
             return Ok(font);
         }
 
