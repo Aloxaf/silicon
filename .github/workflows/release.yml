@@ -1,0 +1,118 @@
+on:
+  push:
+    tags:
+    - 'v*'
+
+name: Release
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    outputs: 
+      upload_url: ${{ steps.create_release.outputs.upload_url }} 
+    steps:
+      - id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  release-linux:
+    name: x86_64-unknown-linux-gnu
+    needs: create_release
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          sudo apt-get update
+          sudo apt-get install libx11-xcb-dev libxcb-shape0-dev libxcb-xfixes0-dev
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+      - id: get_name
+        run: |
+          echo ::set-output name=NAME::silicon-${GITHUB_REF/refs\/tags\//}-x86_64-unknown-linux-gnu.tar.xz
+      - run: |
+          tar czf ${{ steps.get_name.outputs.NAME }} ./target/release/silicon
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ steps.get_name.outputs.NAME }}
+          asset_name: ${{ steps.get_name.outputs.NAME }}
+          asset_content_type: application/zip
+
+  release-macos:
+    name: x86_64-apple-darwin
+    needs: create_release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+      - id: get_name
+        run: |
+          echo ::set-output name=NAME::silicon-${GITHUB_REF/refs\/tags\//}-x86_64-apple-darwin.tar.xz
+      - run: |
+          tar czf ${{ steps.get_name.outputs.NAME }} ./target/release/silicon
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ steps.get_name.outputs.NAME }}
+          asset_name: ${{ steps.get_name.outputs.NAME }}
+          asset_content_type: application/zip
+
+  release-windows:
+    name: x86_64-pc-windows-gnu
+    needs: create_release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64-pc-windows-gnu]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --target ${{ matrix.target }}
+      - id: get_name
+        run: |
+          echo ::set-output name=NAME::silicon-${GITHUB_REF/refs\/tags\//}-${{ matrix.target }}.tar.xz
+          echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - run: |
+          shopt -s extglob
+          tar czf ${{ steps.get_name.outputs.NAME }} ./target/${{ matrix.target }}/release/silicon?(|.exe)
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ steps.get_name.outputs.NAME }}
+          asset_name: ${{ steps.get_name.outputs.NAME }}
+          asset_content_type: application/zip

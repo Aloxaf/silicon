@@ -3,8 +3,6 @@
 [![Crates.io](https://img.shields.io/crates/v/silicon.svg)](https://crates.io/crates/silicon)
 [![Documentation](https://docs.rs/silicon/badge.svg)](https://docs.rs/silicon)
 [![CI](https://github.com/Aloxaf/silicon/workflows/CI/badge.svg)](https://github.com/Aloxaf/silicon/actions?query=workflow%3ACI)
-[![Linux Build Status](https://travis-ci.org/Aloxaf/silicon.svg?branch=master)](https://travis-ci.org/Aloxaf/silicon)
-[![Windows build status](https://ci.appveyor.com/api/projects/status/github/Aloxaf/silicon?svg=true)](https://ci.appveyor.com/project/Aloxaf/silicon)
 ![License](https://img.shields.io/crates/l/silicon.svg)
 
 Silicon is an alternative to [Carbon](https://github.com/dawnlabs/carbon) implemented in Rust.
