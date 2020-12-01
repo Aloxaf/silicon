@@ -123,3 +123,8 @@ see `silicon --help` for detail
 Silicon reads syntax-definition and theme cache from bat's cache directory. 
 
 You can find the steps to add new syntaxes / themes for bat here: [sharkdp/bat#adding-new-syntaxes--language-definitions](https://github.com/sharkdp/bat#adding-new-syntaxes--language-definitions).
+
+# Related projects
+
+- [vim-silicon](https://github.com/segeljakt/vim-silicon)
+- [silicon.el](https://github.com/iensu/silicon-el)
