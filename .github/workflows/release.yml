@@ -44,7 +44,7 @@ jobs:
         run: |
           echo ::set-output name=NAME::silicon-${GITHUB_REF/refs\/tags\//}-x86_64-unknown-linux-gnu.tar.gz
       - run: |
-          tar czf ${{ steps.get_name.outputs.NAME }} ./target/release/silicon
+          tar czf ${{ steps.get_name.outputs.NAME }} -C ./target/release silicon
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -72,7 +72,7 @@ jobs:
         run: |
           echo ::set-output name=NAME::silicon-${GITHUB_REF/refs\/tags\//}-x86_64-apple-darwin.tar.gz
       - run: |
-          tar czf ${{ steps.get_name.outputs.NAME }} ./target/release/silicon
+          tar czf ${{ steps.get_name.outputs.NAME }} -C ./target/release silicon
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -107,7 +107,7 @@ jobs:
           echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       - run: |
           shopt -s extglob
-          tar czf ${{ steps.get_name.outputs.NAME }} ./target/${{ matrix.target }}/release/silicon?(|.exe)
+          tar czf ${{ steps.get_name.outputs.NAME }} -C ./target/${{ matrix.target }}/release silicon?(|.exe)
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
