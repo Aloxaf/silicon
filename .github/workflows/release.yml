@@ -107,7 +107,7 @@ jobs:
           echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       - run: |
           shopt -s extglob
-          tar czf ${{ steps.get_name.outputs.NAME }} -C ./target/${{ matrix.target }}/release silicon?(|.exe)
+          tar czf ${{ steps.get_name.outputs.NAME }} -C ./target/${{ matrix.target }}/release silicon.exe
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
