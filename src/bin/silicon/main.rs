@@ -17,9 +17,9 @@ use {image::ImageOutputFormat, pasteboard::Pasteboard};
 use {image::ImageOutputFormat, std::process::Command};
 
 mod config;
+use crate::config::{config_file, get_args_from_config_file};
 use config::Config;
 use silicon::utils::init_syntect;
-use crate::config::{get_args_from_config_file, config_file};
 
 #[cfg(target_os = "linux")]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
