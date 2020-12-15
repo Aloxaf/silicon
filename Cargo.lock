@@ -1286,6 +1286,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "shell-words"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6fa3938c99da4914afedd13bf3d79bcb6c277d1b2c398d23257a304d9e1b074"
+
+[[package]]
 name = "silicon"
 version = "0.4.0"
 dependencies = [
@@ -1298,9 +1304,11 @@ dependencies = [
  "font-kit",
  "image",
  "imageproc",
+ "lazy_static",
  "log",
  "pasteboard",
  "pathfinder_geometry",
+ "shell-words",
  "structopt 0.3.20",
  "syntect",
  "tempfile",

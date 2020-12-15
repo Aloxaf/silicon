@@ -1,49 +1,27 @@
+use crate::directories::PROJECT_DIRS;
 use crate::error::ParseColorError;
 use image::imageops::{crop, resize, FilterType};
 use image::Pixel;
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba, RgbaImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut};
 use imageproc::rect::Rect;
-use std::env;
-use std::path::PathBuf;
 use syntect::dumps;
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
 
-// Copied from https://github.com/sharkdp/bat/blob/12a1fe3ad417f7694c4490b94b793387c7a7b536/src/bin/bat/directories.rs#L35
-fn get_cache_dir() -> Option<PathBuf> {
-    // on all OS prefer BAT_CACHE_PATH if set
-    let cache_dir_op = env::var_os("BAT_CACHE_PATH").map(PathBuf::from);
-    if cache_dir_op.is_some() {
-        return cache_dir_op;
-    }
-
-    #[cfg(target_os = "macos")]
-    let cache_dir_op = env::var_os("XDG_CACHE_HOME")
-        .map(PathBuf::from)
-        .filter(|p| p.is_absolute())
-        .or_else(|| dirs::home_dir().map(|d| d.join(".cache")));
-
-    #[cfg(not(target_os = "macos"))]
-    let cache_dir_op = dirs::cache_dir();
-
-    cache_dir_op.map(|d| d.join("bat"))
-}
-
 pub fn read_from_bat_cache() -> Option<(SyntaxSet, ThemeSet)> {
-    get_cache_dir().and_then(|cache_dir| {
-        let syntax_cache = cache_dir.join("syntaxes.bin");
-        let theme_cache = cache_dir.join("themes.bin");
-        if syntax_cache.exists() && theme_cache.exists() {
-            if let (Ok(a), Ok(b)) = (
-                dumps::from_dump_file(syntax_cache),
-                dumps::from_dump_file(theme_cache),
-            ) {
-                return Some((a, b));
-            }
+    let cache_dir = PROJECT_DIRS.cache_dir();
+    let syntax_cache = cache_dir.join("syntaxes.bin");
+    let theme_cache = cache_dir.join("themes.bin");
+    if syntax_cache.exists() && theme_cache.exists() {
+        if let (Ok(a), Ok(b)) = (
+            dumps::from_dump_file(syntax_cache),
+            dumps::from_dump_file(theme_cache),
+        ) {
+            return Some((a, b));
         }
-        None
-    })
+    }
+    None
 }
 
 /// Load the default SyntaxSet and ThemeSet.

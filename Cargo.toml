@@ -9,14 +9,6 @@ repository = "https://github.com/Aloxaf/silicon"
 license = "MIT"
 edition = "2018"
 
-[lib]
-name = "silicon"
-path = "src/lib.rs"
-
-[[bin]]
-name = "silicon"
-path = "src/bin.rs"
-
 [dependencies]
 dirs = "3.0"
 imageproc = "0.22.0"
@@ -26,6 +18,8 @@ tempfile = "3.1.0"
 conv = "0.3.3"
 pathfinder_geometry = "0.5.1"
 log = "0.4.11"
+lazy_static = "1.4.0"
+shell-words = { version = "1.0.0", optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 pasteboard = "0.1.1"
@@ -61,5 +55,7 @@ features = ["termcolor", "atty", "humantime"]
 optional = true
 
 [features]
+# fearures required for silicon as a application
+# disable it when using as a library
 default = ["bin"]
-bin = ["structopt", "env_logger", "anyhow"]
+bin = ["structopt", "env_logger", "anyhow", "shell-words"]

@@ -1,15 +1,42 @@
-use crate::formatter::{ImageFormatter, ImageFormatterBuilder};
-use crate::utils::{Background, ShadowAdder, ToRgba};
 use anyhow::{Context, Error};
 use clipboard::{ClipboardContext, ClipboardProvider};
 use image::Rgba;
+use silicon::directories::PROJECT_DIRS;
+use silicon::formatter::{ImageFormatter, ImageFormatterBuilder};
+use silicon::utils::{Background, ShadowAdder, ToRgba};
+use std::ffi::OsString;
 use std::fs::File;
 use std::io::{stdin, Read};
 use std::num::ParseIntError;
 use std::path::PathBuf;
+use structopt::clap::AppSettings::ColoredHelp;
 use structopt::StructOpt;
 use syntect::highlighting::{Theme, ThemeSet};
 use syntect::parsing::{SyntaxReference, SyntaxSet};
+
+pub fn config_file() -> PathBuf {
+    std::env::var("SILICON_CONFIG_PATH")
+        .ok()
+        .map(PathBuf::from)
+        .filter(|config_path| config_path.is_file())
+        .unwrap_or_else(|| PROJECT_DIRS.config_dir().join("config"))
+}
+
+pub fn get_args_from_config_file() -> Vec<OsString> {
+    let args = std::fs::read_to_string(config_file())
+        .ok()
+        .and_then(|content| {
+            content
+                .split('\n')
+                .map(|line| line.trim())
+                .filter(|line| !line.starts_with('#') && !line.is_empty())
+                .map(|line| shell_words::split(line))
+                .collect::<Result<Vec<_>, _>>()
+                .ok()
+        })
+        .unwrap_or_default();
+    args.iter().flatten().map(OsString::from).collect()
+}
 
 fn parse_str_color(s: &str) -> Result<Rgba<u8>, Error> {
     Ok(s.to_rgba()
@@ -54,6 +81,7 @@ type Lines = Vec<u32>;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "silicon")]
+#[structopt(global_setting(ColoredHelp))]
 pub struct Config {
     /// Background image
     #[structopt(long, value_name = "IMAGE", conflicts_with = "background")]
@@ -68,6 +96,10 @@ pub struct Config {
         parse(try_from_str = parse_str_color)
     )]
     pub background: Rgba<u8>,
+
+    /// Show the path of silicon config file
+    #[structopt(long)]
+    pub config_file: bool,
 
     /// Read input from clipboard.
     #[structopt(long)]
@@ -110,7 +142,7 @@ pub struct Config {
         short,
         long,
         value_name = "PATH",
-        required_unless_one = &["list-fonts", "list-themes", "to-clipboard"]
+        required_unless_one = &["config-file", "list-fonts", "list-themes", "to-clipboard"]
     )]
     pub output: Option<PathBuf>,
 

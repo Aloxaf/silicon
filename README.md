@@ -124,6 +124,19 @@ Silicon reads syntax-definition and theme cache from bat's cache directory.
 
 You can find the steps to add new syntaxes / themes for bat here: [sharkdp/bat#adding-new-syntaxes--language-definitions](https://github.com/sharkdp/bat#adding-new-syntaxes--language-definitions).
 
+## Configuration file
+
+You can write some common args to `silicon --config-file`.
+
+Example:
+```shell
+# enable shadow
+--shadow-color '#555'
+--background '#fff'
+--shadow-blur-radius 30
+--no-window-controls
+```
+
 # Related projects
 
 - [vim-silicon](https://github.com/segeljakt/vim-silicon)

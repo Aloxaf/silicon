@@ -1,10 +1,6 @@
 #[macro_use]
-extern crate log;
-#[macro_use]
 extern crate anyhow;
 
-use crate::config::Config;
-use crate::utils::*;
 use anyhow::Error;
 use image::DynamicImage;
 use structopt::StructOpt;
@@ -20,12 +16,10 @@ use {image::ImageOutputFormat, pasteboard::Pasteboard};
 #[cfg(target_os = "linux")]
 use {image::ImageOutputFormat, std::process::Command};
 
-pub mod blur;
-pub mod config;
-pub mod error;
-pub mod font;
-pub mod formatter;
-pub mod utils;
+mod config;
+use config::Config;
+use silicon::utils::init_syntect;
+use crate::config::{get_args_from_config_file, config_file};
 
 #[cfg(target_os = "linux")]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
@@ -81,7 +75,11 @@ pub fn dump_image_to_clipboard(_image: &DynamicImage) -> Result<(), Error> {
 }
 
 fn run() -> Result<(), Error> {
-    let config: Config = Config::from_args();
+    let mut args = get_args_from_config_file();
+    let mut args_cli = std::env::args_os();
+    args.insert(0, args_cli.next().unwrap());
+    args.extend(args_cli);
+    let config: Config = Config::from_iter(args);
 
     let (ps, ts) = init_syntect();
 
@@ -95,6 +93,9 @@ fn run() -> Result<(), Error> {
         for font in source.all_families().unwrap_or_default() {
             println!("{}", font);
         }
+        return Ok(());
+    } else if config.config_file {
+        println!("{}", config_file().to_string_lossy());
         return Ok(());
     }
 
