@@ -17,7 +17,7 @@ clipboard = "0.5.0"
 tempfile = "3.1.0"
 conv = "0.3.3"
 pathfinder_geometry = "0.5.1"
-log = "0.4.11"
+log = "0.4.14"
 lazy_static = "1.4.0"
 shell-words = { version = "1.0.0", optional = true }
 
