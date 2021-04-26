@@ -38,7 +38,7 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
     Ok(())
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", not(target_arch = "aarch64")))]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
     let mut temp = tempfile::NamedTempFile::new()?;
     image.write_to(&mut temp, ImageOutputFormat::Png)?;
@@ -67,7 +67,7 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
     Ok(())
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+#[cfg(not(any(target_os = "linux", all(target_os = "macos", not(target_arch = "aarch64")), target_os = "windows")))]
 pub fn dump_image_to_clipboard(_image: &DynamicImage) -> Result<(), Error> {
     Err(format_err!(
         "This feature hasn't been implemented for your system"
