@@ -1,0 +1,27 @@
+version: 2
+updates:
+- package-ecosystem: cargo
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "21:00"
+  open-pull-requests-limit: 10
+  assignees:
+  - Aloxaf
+  ignore:
+  - dependency-name: anyhow
+    versions:
+    - 1.0.38
+    - 1.0.39
+  - dependency-name: env_logger
+    versions:
+    - 0.8.3
+  - dependency-name: image
+    versions:
+    - 0.23.13
+  - dependency-name: log
+    versions:
+    - 0.4.14
+  - dependency-name: tempfile
+    versions:
+    - 3.2.0
