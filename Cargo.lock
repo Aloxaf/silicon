@@ -910,9 +910,9 @@ dependencies = [
 
 [[package]]
 name = "pasteboard"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a083d2a38c2dfd0b8669c28cec853dc5bbbf310f0886ff0a9cffe97e5e47b1a2"
+checksum = "639c0cdcf01a242098cf6a9e6f06a2661267dcf3c918d53b5a78c2dd40c05ce6"
 dependencies = [
  "cocoa",
  "objc",
