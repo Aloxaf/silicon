@@ -25,7 +25,7 @@ shell-words = { version = "1.0.0", optional = true }
 pasteboard = "0.1.2"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-clipboard-win = "4.0.2"
+clipboard-win = "4.2.1"
 image = { version = "0.23", default-features = false, features = ["jpeg", "bmp", "jpeg_rayon"] }
 
 [dependencies.image]

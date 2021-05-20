@@ -181,9 +181,9 @@ dependencies = [
 
 [[package]]
 name = "clipboard-win"
-version = "4.0.3"
+version = "4.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5123c6b97286809fea9e38d2c9bf530edbcb9fc0d8f8272c28b0c95f067fa92d"
+checksum = "4e4ea1881992efc993e4dc50a324cdbd03216e41bdc8385720ff47efc9bd2ca8"
 dependencies = [
  "error-code",
  "str-buf",
@@ -436,9 +436,9 @@ dependencies = [
 
 [[package]]
 name = "error-code"
-version = "2.0.2"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b49c94f66f2d2c5ee8685039e458b4e6c9f13af7c28736baf10ce42966a5ab52"
+checksum = "b5115567ac25674e0043e472be13d14e537f37ea8aa4bdc4aef0c89add1db1ff"
 dependencies = [
  "libc",
  "str-buf",
@@ -1327,7 +1327,7 @@ version = "0.4.1"
 dependencies = [
  "anyhow",
  "clipboard",
- "clipboard-win 4.0.3",
+ "clipboard-win 4.2.1",
  "conv",
  "dirs 3.0.1",
  "env_logger",
