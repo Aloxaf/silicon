@@ -82,6 +82,7 @@ fn run() -> Result<(), Error> {
     let config: Config = Config::from_iter(args);
     println!("{:?}", config);
 
+
     let (ps, ts) = init_syntect();
 
     if config.list_themes {
@@ -100,11 +101,19 @@ fn run() -> Result<(), Error> {
         return Ok(());
     }
 
+
     let (syntax, mut code) = config.get_source_code(&ps)?;
-    if config.end != 0 {
+    
+    if config.end > 0 {
         code = get_lines_of_code(config.start, config.end, &code)
         .map_err(|_e| format_err!("The value of 'start' cannot be larger than that of 'end'"))?;
     }
+
+    if config.start > 0 && config.end == 0 {
+        code = get_lines_of_code(config.start, code.matches("\n").count() as u32 + 1, &code)
+        .map_err(|_e| format_err!("The value of 'start' cannot be larger than that of 'end'"))?;
+    }
+
     let theme = config.theme(&ts)?;
 
     let mut h = HighlightLines::new(syntax, &theme);

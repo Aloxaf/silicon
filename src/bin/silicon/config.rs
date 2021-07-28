@@ -203,10 +203,10 @@ pub struct Config {
     // watermark: Option<String>,
 
     // Add starting and ending range for copy
-    #[structopt(long, default_value = "0", value_name = "LINE")]
+    #[structopt(long, default_value = "0", value_name = "LINE_NUM")]
     pub start: u32,
 
-    #[structopt(long, default_value = "0", value_name = "LINE")]
+    #[structopt(long, default_value = "0", value_name = "LINE_NUM")]
     pub end: u32,
 }
 
