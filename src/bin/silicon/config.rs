@@ -201,6 +201,13 @@ pub struct Config {
     // Draw a custom text on the bottom right corner
     // #[structopt(long)]
     // watermark: Option<String>,
+
+    // Add starting and ending range for copy
+    #[structopt(long, default_value = "0", value_name = "LINE")]
+    pub start: u32,
+
+    #[structopt(long, default_value = "0", value_name = "LINE")]
+    pub end: u32,
 }
 
 impl Config {

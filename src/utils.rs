@@ -1,5 +1,7 @@
+use std::fmt::{write};
+
 use crate::directories::PROJECT_DIRS;
-use crate::error::ParseColorError;
+use crate::error::{ParseColorError, GetLocError};
 use image::imageops::{crop, resize, FilterType};
 use image::Pixel;
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba, RgbaImage};
@@ -364,6 +366,25 @@ pub(crate) fn draw_filled_circle_mut<I>(
             p += 2 * (x - y) + 1;
         }
     }
+}
+
+
+pub fn get_lines_of_code(start: u32, end:u32, code: &str) -> std::result::Result<String, GetLocError>{
+    if end < start {
+        return Err(GetLocError);
+    }
+    let mut iter = 0;
+    let mut buff_str = String::new();
+    for line in code.lines(){
+        iter += 1;
+        if (start..end + 1).contains(&iter){
+            buff_str.push_str(line);
+            buff_str.push_str("\n");
+        }
+    }
+
+    println!("##### {}", buff_str);
+    Ok(buff_str)
 }
 
 #[cfg(test)]

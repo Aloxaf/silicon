@@ -54,3 +54,13 @@ impl From<ParseIntError> for ParseColorError {
         ParseColorError::InvalidDigit
     }
 }
+
+#[derive(Debug)]
+pub struct GetLocError;
+
+impl std::fmt::Display for GetLocError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "end cannot be smaller than start")
+    }
+}
+impl std::error::Error for GetLocError{}

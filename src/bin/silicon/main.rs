@@ -19,7 +19,7 @@ use {image::ImageOutputFormat, std::process::Command};
 mod config;
 use crate::config::{config_file, get_args_from_config_file};
 use config::Config;
-use silicon::utils::init_syntect;
+use silicon::utils::{get_lines_of_code, init_syntect};
 
 #[cfg(target_os = "linux")]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
@@ -80,6 +80,7 @@ fn run() -> Result<(), Error> {
     args.insert(0, args_cli.next().unwrap());
     args.extend(args_cli);
     let config: Config = Config::from_iter(args);
+    println!("{:?}", config);
 
     let (ps, ts) = init_syntect();
 
@@ -99,8 +100,11 @@ fn run() -> Result<(), Error> {
         return Ok(());
     }
 
-    let (syntax, code) = config.get_source_code(&ps)?;
-
+    let (syntax, mut code) = config.get_source_code(&ps)?;
+    if config.end != 0 {
+        code = get_lines_of_code(config.start, config.end, &code)
+        .map_err(|_e| format_err!("The value of 'start' cannot be larger than that of 'end'"))?;
+    }
     let theme = config.theme(&ts)?;
 
     let mut h = HighlightLines::new(syntax, &theme);
