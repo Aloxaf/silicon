@@ -3,8 +3,21 @@
 //! This file is originally from https://github.com/fschutt/fastblur
 //! Edited by aloxaf <aloxafx@gmail.com> to process RgbaImage
 
-use image::RgbaImage;
 use std::cmp::min;
+
+use image::RgbaImage;
+use rayon::prelude::*;
+
+#[derive(Copy, Clone)]
+struct SharedMutPtr<>(*mut [[u8; 4]]);
+
+unsafe impl Sync for SharedMutPtr {}
+
+impl SharedMutPtr {
+    unsafe fn get(&self) -> &mut [[u8; 4]] {
+        &mut *self.0
+    }
+}
 
 pub fn gaussian_blur(image: RgbaImage, sigma: f32) -> RgbaImage {
     let (width, height) = image.dimensions();
@@ -109,7 +122,8 @@ fn box_blur_vert(
 ) {
     let iarr = 1.0 / (blur_radius + blur_radius + 1) as f32;
 
-    for i in 0..width {
+    let frontbuf = SharedMutPtr(frontbuf as *mut [[u8; 4]]);
+    (0..width).into_par_iter().for_each(|i| {
         let col_start = i; //inclusive
         let col_end = i + width * (height - 1); //inclusive
         let mut ti: usize = i;
@@ -166,6 +180,7 @@ fn box_blur_vert(
             val_b += isize::from(bb[2]) - isize::from(fv[2]);
             val_a += isize::from(bb[3]) - isize::from(fv[3]);
 
+            let frontbuf = unsafe { frontbuf.get() };
             frontbuf[ti] = [
                 round(val_r as f32 * iarr) as u8,
                 round(val_g as f32 * iarr) as u8,
@@ -188,6 +203,7 @@ fn box_blur_vert(
                 val_b += isize::from(bb1[2]) - isize::from(bb2[2]);
                 val_a += isize::from(bb1[3]) - isize::from(bb2[3]);
 
+                let frontbuf = unsafe { frontbuf.get() };
                 frontbuf[ti] = [
                     round(val_r as f32 * iarr) as u8,
                     round(val_g as f32 * iarr) as u8,
@@ -206,6 +222,7 @@ fn box_blur_vert(
                 val_b += isize::from(lv[2]) - isize::from(bb[2]);
                 val_a += isize::from(lv[3]) - isize::from(bb[3]);
 
+                let frontbuf = unsafe { frontbuf.get() };
                 frontbuf[ti] = [
                     round(val_r as f32 * iarr) as u8,
                     round(val_g as f32 * iarr) as u8,
@@ -215,7 +232,7 @@ fn box_blur_vert(
                 ti += width;
             }
         }
-    }
+    });
 }
 
 #[inline]
@@ -228,7 +245,8 @@ fn box_blur_horz(
 ) {
     let iarr = 1.0 / (blur_radius + blur_radius + 1) as f32;
 
-    for i in 0..height {
+    let frontbuf = SharedMutPtr(frontbuf as *mut [[u8; 4]]);
+    (0..height).into_par_iter().for_each(|i| {
         let row_start: usize = i * width; // inclusive
         let row_end: usize = (i + 1) * width - 1; // inclusive
         let mut ti: usize = i * width; // VERTICAL: $i;
@@ -286,6 +304,7 @@ fn box_blur_horz(
             val_b += isize::from(bb[2]) - isize::from(fv[2]);
             val_a += isize::from(bb[3]) - isize::from(fv[3]);
 
+            let frontbuf = unsafe { frontbuf.get() };
             frontbuf[ti] = [
                 round(val_r as f32 * iarr) as u8,
                 round(val_g as f32 * iarr) as u8,
@@ -310,6 +329,7 @@ fn box_blur_horz(
                 val_b += isize::from(bb1[2]) - isize::from(bb2[2]);
                 val_a += isize::from(bb1[3]) - isize::from(bb2[3]);
 
+                let frontbuf = unsafe { frontbuf.get() };
                 frontbuf[ti] = [
                     round(val_r as f32 * iarr) as u8,
                     round(val_g as f32 * iarr) as u8,
@@ -329,6 +349,7 @@ fn box_blur_horz(
                 val_b += isize::from(lv[2]) - isize::from(bb[2]);
                 val_a += isize::from(lv[3]) - isize::from(bb[3]);
 
+                let frontbuf = unsafe { frontbuf.get() };
                 frontbuf[ti] = [
                     round(val_r as f32 * iarr) as u8,
                     round(val_g as f32 * iarr) as u8,
@@ -338,7 +359,7 @@ fn box_blur_horz(
                 ti += 1;
             }
         }
-    }
+    });
 }
 
 #[inline]
