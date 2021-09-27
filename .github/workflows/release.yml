@@ -83,31 +83,28 @@ jobs:
           asset_content_type: application/zip
 
   release-windows:
-    name: x86_64-pc-windows-gnu
+    name: x86_64-pc-windows-msvc
     needs: create_release
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target: [x86_64-pc-windows-gnu]
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          target: ${{ matrix.target }}
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          use-cross: true
           command: build
-          args: --release --target ${{ matrix.target }}
+          args: --release
       - id: get_name
+        shell: bash
         run: |
-          echo ::set-output name=NAME::silicon-${GITHUB_REF/refs\/tags\//}-${{ matrix.target }}.tar.gz
+          echo ::set-output name=NAME::silicon-${GITHUB_REF/refs\/tags\//}-x86_64-pc-windows-msvc.tar.gz
           echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-      - run: |
+      - shell: bash
+        run: |
           shopt -s extglob
-          tar czf ${{ steps.get_name.outputs.NAME }} -C ./target/${{ matrix.target }}/release silicon.exe
+          tar czf ${{ steps.get_name.outputs.NAME }} -C ./target/release silicon.exe
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
