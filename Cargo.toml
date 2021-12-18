@@ -12,7 +12,6 @@ edition = "2018"
 [dependencies]
 dirs = "3.0"
 imageproc = "0.22.0"
-font-kit = "0.10"
 clipboard = "0.5.0"
 tempfile = "3.1.0"
 conv = "0.3.3"
@@ -54,6 +53,13 @@ version = "0.8.2"
 default-features = false
 features = ["termcolor", "atty", "humantime"]
 optional = true
+
+[dependencies.font-kit]
+version= "0.10"
+features= ["loader-freetype-default", "source-fontconfig-default"]
+
+[dependencies.harfbuzz-sys]
+version="0.5.0"
 
 [patch.crates-io]
 pathfinder_simd = { version = "0.5.0", git = "https://github.com/servo/pathfinder" }
