@@ -10,7 +10,7 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-dirs = "3.0"
+dirs = "4.0"
 imageproc = "0.22.0"
 clipboard = "0.5.0"
 tempfile = "3.1.0"
