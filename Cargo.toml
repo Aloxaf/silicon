@@ -55,7 +55,7 @@ features = ["termcolor", "atty", "humantime"]
 optional = true
 
 [dependencies.font-kit]
-version= "0.10"
+version= "0.11"
 features= ["loader-freetype-default", "source-fontconfig-default"]
 
 [dependencies.harfbuzz-sys]
