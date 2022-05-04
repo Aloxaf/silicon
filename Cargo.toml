@@ -34,7 +34,7 @@ default-features = false
 features = ["jpeg", "png", "jpeg_rayon"]
 
 [dependencies.syntect]
-version = "4.4"
+version = "5.0"
 default-features = false
 features = ["parsing", "dump-load", "regex-onig"]
 
