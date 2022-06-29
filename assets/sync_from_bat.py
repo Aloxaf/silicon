@@ -10,6 +10,8 @@ if not os.path.exists('../../bat'):
 else:
     os.system('git -C ../../bat pull')
 
+os.system('git -C ../../bat checkout v0.18.1')
+
 for syntax_file in glob('../../bat/assets/syntaxes/**/*.sublime-syntax'):
     copy(syntax_file, './syntaxes/')
 
