@@ -25,7 +25,7 @@ rayon = "1.5.1"
 pasteboard = "0.1.3"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-clipboard-win = "4.0.2"
+clipboard-win = "4.4.2"
 image = { version = "0.23", default-features = false, features = ["jpeg", "bmp", "jpeg_rayon"] }
 
 [dependencies.image]
