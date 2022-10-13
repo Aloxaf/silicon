@@ -19,7 +19,7 @@ pub fn config_file() -> PathBuf {
         .ok()
         .map(PathBuf::from)
         .filter(|config_path| config_path.is_file())
-        .unwrap_or_else(|| PROJECT_DIRS.config_dir().join("config"))
+        .unwrap_or_else(|| PROJECT_DIRS.config_dir().to_owned())
 }
 
 pub fn get_args_from_config_file() -> Vec<OsString> {
@@ -142,7 +142,7 @@ pub struct Config {
         short,
         long,
         value_name = "PATH",
-        required_unless_one = &["config-file", "list-fonts", "list-themes", "to-clipboard"]
+        required_unless_one = &["config-file", "list-fonts", "list-themes", "to-clipboard", "build-cache"]
     )]
     pub output: Option<PathBuf>,
 
@@ -195,12 +195,16 @@ pub struct Config {
     #[structopt(long, value_name = "THEME", default_value = "Dracula")]
     pub theme: String,
 
-    // Copy the output image to clipboard.
+    /// Copy the output image to clipboard.
     #[structopt(short = "c", long)]
     pub to_clipboard: bool,
     // Draw a custom text on the bottom right corner
     // #[structopt(long)]
     // watermark: Option<String>,
+
+    /// build syntax definition and theme cache
+    #[structopt(long)]
+    pub build_cache: Option<PathBuf>,
 }
 
 impl Config {

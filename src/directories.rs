@@ -28,10 +28,9 @@ impl SiliconProjectDirs {
         })
     }
 
-    // silicon use bat's cache directory
     fn get_cache_dir() -> Option<PathBuf> {
-        // on all OS prefer BAT_CACHE_PATH if set
-        let cache_dir_op = env::var_os("BAT_CACHE_PATH").map(PathBuf::from);
+        // on all OS prefer SILICON_CACHE_PATH if set
+        let cache_dir_op = env::var_os("SILICON_CACHE_PATH").map(PathBuf::from);
         if cache_dir_op.is_some() {
             return cache_dir_op;
         }
@@ -45,7 +44,7 @@ impl SiliconProjectDirs {
         #[cfg(not(target_os = "macos"))]
         let cache_dir_op = dirs::cache_dir();
 
-        cache_dir_op.map(|d| d.join("bat"))
+        cache_dir_op.map(|d| d.join("silicon"))
     }
 
     pub fn cache_dir(&self) -> &Path {

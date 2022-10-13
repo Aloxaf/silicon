@@ -19,7 +19,7 @@ use {image::ImageOutputFormat, std::process::Command};
 mod config;
 use crate::config::{config_file, get_args_from_config_file};
 use config::Config;
-use silicon::utils::init_syntect;
+use silicon::assets::HighlightingAssets;
 
 #[cfg(target_os = "linux")]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
@@ -81,9 +81,15 @@ fn run() -> Result<(), Error> {
     args.extend(args_cli);
     let config: Config = Config::from_iter(args);
 
-    let (ps, ts) = init_syntect();
+    let ha = HighlightingAssets::new();
+    let (ps, ts) = (ha.syntax_set, ha.theme_set);
 
-    if config.list_themes {
+    if let Some(path) = config.build_cache {
+        let mut ha = HighlightingAssets::new();
+        ha.add_from_folder(path)?;
+        ha.dump_to_file()?;
+        return Ok(())
+    } else if config.list_themes {
         for i in ts.themes.keys() {
             println!("{}", i);
         }
@@ -105,8 +111,8 @@ fn run() -> Result<(), Error> {
 
     let mut h = HighlightLines::new(syntax, &theme);
     let highlight = LinesWithEndings::from(&code)
-        .map(|line| h.highlight(line, &ps))
-        .collect::<Vec<_>>();
+        .map(|line| h.highlight_line(line, &ps))
+        .collect::<Result<Vec<_>, _>>()?;
 
     let mut formatter = config.get_formatter()?;
 

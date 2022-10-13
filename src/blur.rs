@@ -9,7 +9,7 @@ use image::RgbaImage;
 use rayon::prelude::*;
 
 #[derive(Copy, Clone)]
-struct SharedMutPtr<>(*mut [[u8; 4]]);
+struct SharedMutPtr(*mut [[u8; 4]]);
 
 unsafe impl Sync for SharedMutPtr {}
 

@@ -1,39 +1,9 @@
-use crate::directories::PROJECT_DIRS;
 use crate::error::ParseColorError;
-use image::imageops::{crop, resize, FilterType};
+use image::imageops::{crop_imm, resize, FilterType};
 use image::Pixel;
 use image::{DynamicImage, GenericImage, GenericImageView, Rgba, RgbaImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut};
 use imageproc::rect::Rect;
-use syntect::dumps;
-use syntect::highlighting::ThemeSet;
-use syntect::parsing::SyntaxSet;
-
-pub fn read_from_bat_cache() -> Option<(SyntaxSet, ThemeSet)> {
-    let cache_dir = PROJECT_DIRS.cache_dir();
-    let syntax_cache = cache_dir.join("syntaxes.bin");
-    let theme_cache = cache_dir.join("themes.bin");
-    if syntax_cache.exists() && theme_cache.exists() {
-        if let (Ok(a), Ok(b)) = (
-            dumps::from_dump_file(syntax_cache),
-            dumps::from_dump_file(theme_cache),
-        ) {
-            return Some((a, b));
-        }
-    }
-    None
-}
-
-/// Load the default SyntaxSet and ThemeSet.
-pub fn init_syntect() -> (SyntaxSet, ThemeSet) {
-    // try to use bat's cache
-    read_from_bat_cache().unwrap_or_else(|| {
-        (
-            dumps::from_binary(include_bytes!("../assets/syntaxes.bin")),
-            dumps::from_binary(include_bytes!("../assets/themes.bin")),
-        )
-    })
-}
 
 pub trait ToRgba {
     type Target;
@@ -295,18 +265,18 @@ pub(crate) fn round_corner(image: &mut DynamicImage, radius: u32) {
         foreground,
     );
 
-    let part = crop(&mut circle, 0, 0, radius, radius);
-    image.copy_from(&part, 0, 0).unwrap();
+    let part = crop_imm(&mut circle, 0, 0, radius, radius);
+    image.copy_from(&*part, 0, 0).unwrap();
 
-    let part = crop(&mut circle, radius + 1, 0, radius, radius);
-    image.copy_from(&part, width - radius, 0).unwrap();
+    let part = crop_imm(&mut circle, radius + 1, 0, radius, radius);
+    image.copy_from(&*part, width - radius, 0).unwrap();
 
-    let part = crop(&mut circle, 0, radius + 1, radius, radius);
-    image.copy_from(&part, 0, height - radius).unwrap();
+    let part = crop_imm(&mut circle, 0, radius + 1, radius, radius);
+    image.copy_from(&*part, 0, height - radius).unwrap();
 
-    let part = crop(&mut circle, radius + 1, radius + 1, radius, radius);
+    let part = crop_imm(&mut circle, radius + 1, radius + 1, radius, radius);
     image
-        .copy_from(&part, width - radius, height - radius)
+        .copy_from(&*part, width - radius, height - radius)
         .unwrap();
 }
 

@@ -7,8 +7,10 @@
 //! use syntect::util::LinesWithEndings;
 //! use silicon::utils::{init_syntect, ShadowAdder};
 //! use silicon::formatter::ImageFormatterBuilder;
+//! use silicon::assets::HighlightingAssets;
 //!
-//! let (ps, ts) = init_syntect();
+//! let ha = HighlightingAssets::new();
+//! let (ps, ts) = (ha.syntax_set, ha.theme_set);
 //! let code = r#"fn main() {
 //!     println!("Hello, world!");
 //! }
@@ -34,6 +36,7 @@
 #[macro_use]
 extern crate log;
 
+pub mod assets;
 pub mod blur;
 pub mod directories;
 pub mod error;
