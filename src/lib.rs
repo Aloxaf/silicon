@@ -5,7 +5,7 @@
 //! ```
 //! use syntect::easy::HighlightLines;
 //! use syntect::util::LinesWithEndings;
-//! use silicon::utils::{init_syntect, ShadowAdder};
+//! use silicon::utils::ShadowAdder;
 //! use silicon::formatter::ImageFormatterBuilder;
 //! use silicon::assets::HighlightingAssets;
 //!
