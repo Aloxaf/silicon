@@ -1273,7 +1273,7 @@ checksum = "24188a676b6ae68c3b2cb3a01be17fbf7240ce009799bb56d5b1409051e78fde"
 
 [[package]]
 name = "silicon"
-version = "0.4.3"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "clipboard",

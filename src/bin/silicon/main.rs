@@ -27,7 +27,7 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
     let mut temp = tempfile::NamedTempFile::new()?;
     image.write_to(&mut temp, ImageOutputFormat::Png)?;
     Command::new("xclip")
-        .args(&[
+        .args([
             "-sel",
             "clip",
             "-t",

@@ -30,7 +30,7 @@ pub fn get_args_from_config_file() -> Vec<OsString> {
                 .split('\n')
                 .map(|line| line.trim())
                 .filter(|line| !line.starts_with('#') && !line.is_empty())
-                .map(|line| shell_words::split(line))
+                .map(shell_words::split)
                 .collect::<Result<Vec<_>, _>>()
                 .ok()
         })
@@ -39,8 +39,8 @@ pub fn get_args_from_config_file() -> Vec<OsString> {
 }
 
 fn parse_str_color(s: &str) -> Result<Rgba<u8>, Error> {
-    Ok(s.to_rgba()
-        .map_err(|_| format_err!("Invalid color: `{}`", s))?)
+    s.to_rgba()
+        .map_err(|_| format_err!("Invalid color: `{}`", s))
 }
 
 fn parse_font_str(s: &str) -> Vec<(String, f32)> {
@@ -301,7 +301,7 @@ impl Config {
         if let (Ok(home_dir), true) = (std::env::var("HOME"), need_expand) {
             self.output
                 .as_ref()
-                .map(|p| p.to_string_lossy().replacen("~", &home_dir, 1).into())
+                .map(|p| p.to_string_lossy().replacen('~', &home_dir, 1).into())
         } else {
             self.output.clone()
         }

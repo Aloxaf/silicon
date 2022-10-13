@@ -14,6 +14,7 @@ struct SharedMutPtr(*mut [[u8; 4]]);
 unsafe impl Sync for SharedMutPtr {}
 
 impl SharedMutPtr {
+    #[allow(clippy::mut_from_ref)]
     unsafe fn get(&self) -> &mut [[u8; 4]] {
         &mut *self.0
     }

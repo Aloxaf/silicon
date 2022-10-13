@@ -265,16 +265,16 @@ pub(crate) fn round_corner(image: &mut DynamicImage, radius: u32) {
         foreground,
     );
 
-    let part = crop_imm(&mut circle, 0, 0, radius, radius);
+    let part = crop_imm(&circle, 0, 0, radius, radius);
     image.copy_from(&*part, 0, 0).unwrap();
 
-    let part = crop_imm(&mut circle, radius + 1, 0, radius, radius);
+    let part = crop_imm(&circle, radius + 1, 0, radius, radius);
     image.copy_from(&*part, width - radius, 0).unwrap();
 
-    let part = crop_imm(&mut circle, 0, radius + 1, radius, radius);
+    let part = crop_imm(&circle, 0, radius + 1, radius, radius);
     image.copy_from(&*part, 0, height - radius).unwrap();
 
-    let part = crop_imm(&mut circle, radius + 1, radius + 1, radius, radius);
+    let part = crop_imm(&circle, radius + 1, radius + 1, radius, radius);
     image
         .copy_from(&*part, width - radius, height - radius)
         .unwrap();
