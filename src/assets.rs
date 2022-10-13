@@ -4,7 +4,7 @@ use crate::directories::PROJECT_DIRS;
 use anyhow::Result;
 use syntect::dumps;
 use syntect::highlighting::ThemeSet;
-use syntect::parsing::{SyntaxSet};
+use syntect::parsing::SyntaxSet;
 
 const DEFAULT_SYNTAXSET: &'static [u8] = include_bytes!("../assets/syntaxes.bin");
 const DEFAULT_THEMESET: &'static [u8] = include_bytes!("../assets/themes.bin");
@@ -32,11 +32,8 @@ impl HighlightingAssets {
 
     pub fn add_from_folder<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
         let path = path.as_ref();
-        self.theme_set
-            .add_from_folder(path.join("themes"))?;
-        let mut builder = self.syntax_set
-            .clone()
-            .into_builder();
+        self.theme_set.add_from_folder(path.join("themes"))?;
+        let mut builder = self.syntax_set.clone().into_builder();
         builder.add_from_folder(path.join("syntaxes"), true)?;
         self.syntax_set = builder.build();
         Ok(())

@@ -201,7 +201,6 @@ pub struct Config {
     // Draw a custom text on the bottom right corner
     // #[structopt(long)]
     // watermark: Option<String>,
-
     /// build syntax definition and theme cache
     #[structopt(long)]
     pub build_cache: Option<PathBuf>,

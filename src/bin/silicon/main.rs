@@ -88,7 +88,7 @@ fn run() -> Result<(), Error> {
         let mut ha = HighlightingAssets::new();
         ha.add_from_folder(path)?;
         ha.dump_to_file()?;
-        return Ok(())
+        return Ok(());
     } else if config.list_themes {
         for i in ts.themes.keys() {
             println!("{}", i);
