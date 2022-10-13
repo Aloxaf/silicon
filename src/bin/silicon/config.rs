@@ -19,7 +19,7 @@ pub fn config_file() -> PathBuf {
         .ok()
         .map(PathBuf::from)
         .filter(|config_path| config_path.is_file())
-        .unwrap_or_else(|| PROJECT_DIRS.config_dir().to_owned())
+        .unwrap_or_else(|| PROJECT_DIRS.config_dir().join("config"))
 }
 
 pub fn get_args_from_config_file() -> Vec<OsString> {
