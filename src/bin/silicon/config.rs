@@ -202,8 +202,8 @@ pub struct Config {
     // #[structopt(long)]
     // watermark: Option<String>,
     /// build syntax definition and theme cache
-    #[structopt(long)]
-    pub build_cache: Option<PathBuf>,
+    #[structopt(long, value_name = "OUTPUT_DIR")]
+    pub build_cache: Option<Option<PathBuf>>,
 }
 
 impl Config {

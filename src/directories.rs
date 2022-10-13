@@ -1,5 +1,6 @@
 use lazy_static::lazy_static;
 use std::env;
+use std::fs::create_dir_all;
 use std::path::{Path, PathBuf};
 
 pub struct SiliconProjectDirs {
@@ -21,6 +22,9 @@ impl SiliconProjectDirs {
         let config_dir_op = dirs::config_dir();
 
         let config_dir = config_dir_op.map(|d| d.join("silicon"))?;
+
+        create_dir_all(&config_dir).expect("cannot create config dir");
+        create_dir_all(&cache_dir).expect("cannot create cache dir");
 
         Some(Self {
             cache_dir,

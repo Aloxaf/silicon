@@ -39,9 +39,9 @@ impl HighlightingAssets {
         Ok(())
     }
 
-    pub fn dump_to_file(&self) -> Result<()> {
-        dumps::dump_to_file(&self.syntax_set, "./syntaxes.bin")?;
-        dumps::dump_to_file(&self.theme_set, "./themes.bin")?;
+    pub fn dump_to_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        dumps::dump_to_file(&self.syntax_set, path.as_ref().join("syntaxes.bin"))?;
+        dumps::dump_to_file(&self.theme_set, path.as_ref().join("themes.bin"))?;
         Ok(())
     }
 }

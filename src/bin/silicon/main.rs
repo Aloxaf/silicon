@@ -3,6 +3,7 @@ extern crate anyhow;
 
 use anyhow::Error;
 use image::DynamicImage;
+use std::env;
 use structopt::StructOpt;
 use syntect::easy::HighlightLines;
 use syntect::util::LinesWithEndings;
@@ -17,9 +18,9 @@ use {image::ImageOutputFormat, pasteboard::Pasteboard};
 use {image::ImageOutputFormat, std::process::Command};
 
 mod config;
-use crate::config::{config_file, get_args_from_config_file};
-use config::Config;
+use crate::config::{config_file, get_args_from_config_file, Config};
 use silicon::assets::HighlightingAssets;
+use silicon::directories::PROJECT_DIRS;
 
 #[cfg(target_os = "linux")]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
@@ -86,8 +87,12 @@ fn run() -> Result<(), Error> {
 
     if let Some(path) = config.build_cache {
         let mut ha = HighlightingAssets::new();
-        ha.add_from_folder(path)?;
-        ha.dump_to_file()?;
+        ha.add_from_folder(env::current_dir()?)?;
+        if let Some(path) = path {
+            ha.dump_to_file(path)?;
+        } else {
+            ha.dump_to_file(PROJECT_DIRS.cache_dir())?;
+        }
         return Ok(());
     } else if config.list_themes {
         for i in ts.themes.keys() {
