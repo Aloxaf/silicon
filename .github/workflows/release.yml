@@ -28,7 +28,7 @@ jobs:
     steps:
       - run: |
           sudo apt-get update
-          sudo apt-get install libx11-xcb-dev libxcb-shape0-dev libxcb-xfixes0-dev
+          sudo apt-get install libx11-xcb-dev libxcb-shape0-dev libxcb-xfixes0-dev libharfbuzz-dev
       - uses: actions/checkout@v2
         with:
           fetch-depth: 1

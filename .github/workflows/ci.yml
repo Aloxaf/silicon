@@ -32,7 +32,7 @@ jobs:
         run: sudo apt-get update
 
       - name: Install dependencies
-        run: sudo apt-get install libx11-xcb-dev libxcb-shape0-dev libxcb-xfixes0-dev
+        run: sudo apt-get install libx11-xcb-dev libxcb-shape0-dev libxcb-xfixes0-dev libharfbuzz-dev
 
       - name: Cargo fmt
         uses: actions-rs/cargo@v1
