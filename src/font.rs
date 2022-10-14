@@ -194,6 +194,7 @@ impl FontCollection {
         Ok(Self(fonts))
     }
 
+    #[cfg(target_os = "windows")]
     fn glyph_for_char(&self, c: char, style: FontStyle) -> Option<(u32, &ImageFont, &Font)> {
         for font in &self.0 {
             let result = font.get_by_style(style);
