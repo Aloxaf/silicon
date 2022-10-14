@@ -12,7 +12,7 @@
 //! font.draw_text_mut(&mut image, Rgb([255, 0, 0]), 0, 0, FontStyle::REGULAR, "Hello, world");
 //! ```
 use crate::error::FontError;
-#[cfg(not(target_os = "windows"))]
+#[cfg(feature = "harfbuzz")]
 use crate::hb_wrapper::{feature_from_tag, HBBuffer, HBFont};
 use anyhow::Result;
 use conv::ValueInto;
@@ -24,7 +24,6 @@ use font_kit::source::SystemSource;
 use image::{GenericImage, Pixel};
 use imageproc::definitions::Clamp;
 use imageproc::pixelops::weighted_sum;
-use log::trace;
 use pathfinder_geometry::transform2d::Transform2F;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -215,7 +214,7 @@ impl FontCollection {
             .unwrap()
     }
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(feature = "harfbuzz")]
     fn shape_text(&self, font: &mut HBFont, text: &str) -> Result<Vec<u32>> {
         // feature tags
         let features = vec![
@@ -235,7 +234,7 @@ impl FontCollection {
         Ok(glyph_ids)
     }
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(feature = "harfbuzz")]
     fn split_by_font(&self, text: &str, style: FontStyle) -> Vec<(&ImageFont, &Font, String)> {
         let mut result: Vec<(&ImageFont, &Font, String)> = vec![];
         for c in text.chars() {
@@ -248,11 +247,11 @@ impl FontCollection {
                 }
             }
         }
-        trace!("{:#?}", &result);
+        log::trace!("{:#?}", &result);
         result
     }
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(feature = "harfbuzz")]
     fn layout(&self, text: &str, style: FontStyle) -> (Vec<PositionedGlyph>, u32) {
         let mut delta_x = 0;
         let height = self.get_font_height();
@@ -288,7 +287,7 @@ impl FontCollection {
         (glyphs, delta_x)
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(feature = "harfbuzz"))]
     fn layout(&self, text: &str, style: FontStyle) -> (Vec<PositionedGlyph>, u32) {
         let mut delta_x = 0;
         let height = self.get_font_height();

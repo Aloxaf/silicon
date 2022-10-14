@@ -36,6 +36,8 @@ It's not as beautiful as Carbon...
 cargo install silicon
 ```
 
+NOTE: harfbuzz feature is enabled by default. If you are using Windows, I suggest you disable it to get it build easier.
+
 ### AUR
 
 Silicon is available in the official repository:
