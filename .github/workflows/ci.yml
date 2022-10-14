@@ -58,6 +58,7 @@ jobs:
           args: -- --nocapture
 
   test-windows:
+    name: x86_64-pc-windows-msvc
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -73,7 +74,7 @@ jobs:
           override: true
 
       - name: Install dependencies
-        run: vcpkg install --recurse glib:x64-windows fontconfig:x64-windows freetype:x64-windows cairo:x64-windows
+        run: vcpkg install --recurse glib:x64-windows fontconfig:x64-windows freetype:x64-windows cairo:x64-windows  harfbuzz:x64-windows
 
       - name: Cargo check
         uses: actions-rs/cargo@v1
