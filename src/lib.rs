@@ -21,8 +21,9 @@
 //!
 //! let mut h = HighlightLines::new(syntax, theme);
 //! let highlight = LinesWithEndings::from(&code)
-//!     .map(|line| h.highlight(line, &ps))
-//!     .collect::<Vec<_>>();
+//!     .map(|line| h.highlight_line(line, &ps))
+//!     .collect::<Result<Vec<_>, _>>()
+//!     .unwrap();
 //!
 //! let mut formatter = ImageFormatterBuilder::new()
 //!     .font(vec![("Hack", 26.0)])
@@ -42,5 +43,6 @@ pub mod directories;
 pub mod error;
 pub mod font;
 pub mod formatter;
+#[cfg(not(target_os = "windows"))]
 pub mod hb_wrapper;
 pub mod utils;

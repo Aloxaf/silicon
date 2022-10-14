@@ -12,6 +12,7 @@
 //! font.draw_text_mut(&mut image, Rgb([255, 0, 0]), 0, 0, FontStyle::REGULAR, "Hello, world");
 //! ```
 use crate::error::FontError;
+#[cfg(not(target_os = "windows"))]
 use crate::hb_wrapper::{feature_from_tag, HBBuffer, HBFont};
 use anyhow::Result;
 use conv::ValueInto;
@@ -193,6 +194,18 @@ impl FontCollection {
         Ok(Self(fonts))
     }
 
+    #[cfg(target_os = "windows")]
+    fn glyph_for_char(&self, c: char, style: FontStyle) -> Option<(u32, &ImageFont, &Font)> {
+        for font in &self.0 {
+            let result = font.get_by_style(style);
+            if let Some(id) = result.glyph_for_char(c) {
+                return Some((id, font, result));
+            }
+        }
+        eprintln!("[warning] No font found for character `{}`", c);
+        None
+    }
+
     /// get max height of all the fonts
     pub fn get_font_height(&self) -> u32 {
         self.0
@@ -202,6 +215,7 @@ impl FontCollection {
             .unwrap()
     }
 
+    #[cfg(not(target_os = "windows"))]
     fn shape_text(&self, font: &mut HBFont, text: &str) -> Result<Vec<u32>> {
         // feature tags
         let features = vec![
@@ -221,6 +235,7 @@ impl FontCollection {
         Ok(glyph_ids)
     }
 
+    #[cfg(not(target_os = "windows"))]
     fn layout(&self, text: &str, style: FontStyle) -> (Vec<PositionedGlyph>, u32) {
         let mut delta_x = 0;
         let height = self.get_font_height();
@@ -253,6 +268,42 @@ impl FontCollection {
                     raster_rect,
                     position,
                 }
+            })
+            .collect();
+
+        (glyphs, delta_x)
+    }
+
+    #[cfg(target_os = "windows")]
+    fn layout(&self, text: &str, style: FontStyle) -> (Vec<PositionedGlyph>, u32) {
+        let mut delta_x = 0;
+        let height = self.get_font_height();
+
+        let glyphs = text
+            .chars()
+            .filter_map(|c| {
+                self.glyph_for_char(c, style).map(|(id, imfont, font)| {
+                    let raster_rect = font
+                        .raster_bounds(
+                            id,
+                            imfont.size,
+                            Transform2F::default(),
+                            HintingOptions::None,
+                            RasterizationOptions::GrayscaleAa,
+                        )
+                        .unwrap();
+                    let position =
+                        Vector2I::new(delta_x as i32, height as i32) + raster_rect.origin();
+                    delta_x += Self::get_glyph_width(font, id, imfont.size);
+
+                    PositionedGlyph {
+                        id,
+                        font: font.clone(),
+                        size: imfont.size,
+                        raster_rect,
+                        position,
+                    }
+                })
             })
             .collect();
 
