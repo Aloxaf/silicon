@@ -28,6 +28,7 @@ use pathfinder_geometry::transform2d::Transform2F;
 use std::collections::HashMap;
 use std::sync::Arc;
 use syntect::highlighting;
+use log::trace;
 
 /// Font style
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -194,7 +195,6 @@ impl FontCollection {
         Ok(Self(fonts))
     }
 
-    #[cfg(target_os = "windows")]
     fn glyph_for_char(&self, c: char, style: FontStyle) -> Option<(u32, &ImageFont, &Font)> {
         for font in &self.0 {
             let result = font.get_by_style(style);
@@ -236,19 +236,33 @@ impl FontCollection {
     }
 
     #[cfg(not(target_os = "windows"))]
+    fn split_by_font(&self, text: &str, style: FontStyle) -> Vec<(&ImageFont, &Font, String)> {
+        let mut result: Vec<(&ImageFont, &Font, String)> = vec![];
+        for c in text.chars() {
+            if let Some((_, imfont, font)) = self.glyph_for_char(c, style) {
+                if result.is_empty() || !std::ptr::eq(result.last().unwrap().0, imfont) {
+                    result.push((imfont, font, String::new()));
+                }
+                if std::ptr::eq(result.last().unwrap().0, imfont) {
+                    result.last_mut().unwrap().2.push(c);
+                }
+            }
+        }
+        trace!("{:#?}", &result);
+        result
+    }
+
+    #[cfg(not(target_os = "windows"))]
     fn layout(&self, text: &str, style: FontStyle) -> (Vec<PositionedGlyph>, u32) {
         let mut delta_x = 0;
         let height = self.get_font_height();
 
-        let imfont = self.0.get(0).unwrap();
-        let font = imfont.get_by_style(style);
-        let mut hb_font = HBFont::new(font);
-        // apply font features especially ligature with a shape engine
-        let shaped_glyphs = self.shape_text(&mut hb_font, text).unwrap();
-
-        let glyphs = shaped_glyphs
-            .iter()
-            .map(|id| {
+        let mut glyphs = Vec::with_capacity(text.len());
+        for (imfont, font, text) in self.split_by_font(text, style) {
+            let mut hb_font = HBFont::new(font);
+            // apply font features especially ligature with a shape engine
+            let shaped_glyphs = self.shape_text(&mut hb_font, &text).unwrap();
+            glyphs.extend(shaped_glyphs.iter().map(|id| {
                 let raster_rect = font
                     .raster_bounds(
                         *id,
@@ -268,8 +282,8 @@ impl FontCollection {
                     raster_rect,
                     position,
                 }
-            })
-            .collect();
+            }))
+        }
 
         (glyphs, delta_x)
     }

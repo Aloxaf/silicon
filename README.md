@@ -38,13 +38,10 @@ cargo install silicon
 
 ### AUR
 
-Silicon is available on AUR (Thanks to @radmen).
+Silicon is available in the official repository:
 
-You can install it with any AUR helpers you like.
-
-eg.
 ```bash
-pikaur -S silicon
+pacman -S silicon
 ```
 
 ### Homebrew
@@ -61,18 +58,18 @@ brew install silicon
 ```bash
 sudo apt install expat
 sudo apt install libxml2-dev
-sudo apt install pkg-config libasound2-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb-composite0-dev
+sudo apt install pkg-config libasound2-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb-composite0-dev libharfbuzz-dev
 ```
 
 ### Fedora
 ```bash
-sudo dnf install cmake expat-devel libxcb-devel freetype-devel libxml2-devel
+sudo dnf install cmake expat-devel libxcb-devel freetype-devel libxml2-devel harfbuzz
 ```
 
 ### Arch Linux
 
 ```bash
-sudo pacman -S --needed pkgconf freetype2 fontconfig libxcb xclip
+sudo pacman -S --needed pkgconf freetype2 fontconfig libxcb xclip harfbuzz
 ```
 
 ## Examples
