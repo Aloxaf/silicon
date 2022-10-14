@@ -74,7 +74,11 @@ jobs:
           override: true
 
       - name: Install dependencies
-        run: vcpkg install --recurse glib:x64-windows fontconfig:x64-windows freetype:x64-windows cairo:x64-windows  harfbuzz:x64-windows
+        uses: lukka/run-vcpkg@v10
+        with:
+          vcpkgGitCommitId: '6ca56aeb457f033d344a7106cb3f9f1abf8f4e98'
+
+      - run: $VCPKG_ROOT/vcpkg install --recurse glib:x64-windows fontconfig:x64-windows freetype:x64-windows cairo:x64-windows  harfbuzz:x64-windows
 
       - name: Cargo check
         uses: actions-rs/cargo@v1
