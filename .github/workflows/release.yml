@@ -92,7 +92,6 @@ jobs:
         with:
           toolchain: stable
           override: true
-      - run: vcpkg install --recurse glib:x64-windows fontconfig:x64-windows freetype:x64-windows cairo:x64-windows
       - uses: actions-rs/cargo@v1
         with:
           command: build
