@@ -95,7 +95,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release
+          args: --release --no-default-features --features=bin
       - id: get_name
         shell: bash
         run: |

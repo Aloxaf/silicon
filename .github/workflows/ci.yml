@@ -77,12 +77,13 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
+          args: --no-default-features --features=bin
 
       - name: Cargo test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: -- --nocapture
+          args: --no-default-features --features=bin -- --nocapture
 
   test-macos:
     name: x86_64-apple-darwin

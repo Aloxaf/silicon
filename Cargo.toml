@@ -10,10 +10,11 @@ license = "MIT"
 edition = "2018"
 
 [features]
-# fearures required for silicon as a application
+# bin fearure is required for silicon as a application
 # disable it when using as a library
-default = ["bin"]
+default = ["bin", "harfbuzz"]
 bin = ["structopt", "env_logger", "anyhow", "shell-words"]
+harfbuzz = ["harfbuzz-sys", "font-kit/loader-freetype-default", "font-kit/source-fontconfig-default"]
 
 [dependencies]
 dirs = "4.0"
@@ -26,6 +27,8 @@ log = "0.4.11"
 lazy_static = "1.4.0"
 shell-words = { version = "1.0.0", optional = true }
 rayon = "1.5.1"
+font-kit = "0.11"
+harfbuzz-sys = { version = "0.5.0", optional = true }
 
 [dependencies.image]
 version = "0.24"
@@ -52,14 +55,6 @@ version = "0.9.1"
 default-features = false
 features = ["termcolor", "atty", "humantime"]
 optional = true
-
-[dependencies.font-kit]
-version= "0.11"
-features= ["loader-freetype-default"]
-
-[target.'cfg(not(target_os = "windows"))'.dependencies]
-harfbuzz-sys = "0.5.0"
-font-kit = { version = "0.11", features = ["loader-freetype-default", "source-fontconfig-default"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 pasteboard = "0.1.3"
