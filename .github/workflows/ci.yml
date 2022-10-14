@@ -79,7 +79,7 @@ jobs:
           vcpkgGitCommitId: '6ca56aeb457f033d344a7106cb3f9f1abf8f4e98'
 
       - name: Install dependencies
-        run: $VCPKG_ROOT/vcpkg install --recurse glib:x64-windows fontconfig:x64-windows freetype:x64-windows cairo:x64-windows harfbuzz[core,glib]:x64-windows
+        run: $VCPKG_ROOT/vcpkg install --recurse glib:x64-windows fontconfig:x64-windows freetype:x64-windows cairo:x64-windows
         shell: bash
 
       - name: Cargo check

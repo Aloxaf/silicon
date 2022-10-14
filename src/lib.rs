@@ -43,5 +43,6 @@ pub mod directories;
 pub mod error;
 pub mod font;
 pub mod formatter;
+#[cfg(not(target_os = "windows"))]
 pub mod hb_wrapper;
 pub mod utils;
