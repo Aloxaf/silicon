@@ -51,11 +51,11 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
 
 #[cfg(target_os = "windows")]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
-    let mut temp: Vec<u8> = Vec::new();
+    let mut temp = std::io::Cursor::new(Vec::new());
 
     // Convert the image to RGB without alpha because the clipboard
     // of windows doesn't support it.
-    let image = DynamicImage::ImageRgb8(image.to_rgb());
+    let image = DynamicImage::ImageRgb8(image.to_rgb8());
 
     image.write_to(&mut temp, ImageOutputFormat::Bmp)?;
 
@@ -63,7 +63,7 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
         Clipboard::new_attempts(10).map_err(|e| format_err!("Couldn't open clipboard: {}", e))?;
 
     formats::Bitmap
-        .write_clipboard(&temp)
+        .write_clipboard(temp.get_ref())
         .map_err(|e| format_err!("Failed copy image: {}", e))?;
     Ok(())
 }

@@ -11,8 +11,8 @@ env:
 
 jobs:
 
-  test:
-    name: Test
+  test-linux:
+    name: x86_64-unknown-linux-gnu
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,6 +45,35 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
+
+      - name: Cargo check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+
+      - name: Cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: -- --nocapture
+
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+
+      - name: Install dependencies
+        run: vcpkg install --recurse glib:x64-windows fontconfig:x64-windows freetype:x64-windows cairo:x64-windows
 
       - name: Cargo check
         uses: actions-rs/cargo@v1
