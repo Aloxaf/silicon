@@ -59,6 +59,7 @@ features= ["loader-freetype-default"]
 
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 harfbuzz-sys = "0.5.0"
+font-kit = { version = "0.11", features = ["loader-freetype-default", "source-fontconfig-default"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 pasteboard = "0.1.3"
