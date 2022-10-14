@@ -24,11 +24,11 @@ use font_kit::source::SystemSource;
 use image::{GenericImage, Pixel};
 use imageproc::definitions::Clamp;
 use imageproc::pixelops::weighted_sum;
+use log::trace;
 use pathfinder_geometry::transform2d::Transform2F;
 use std::collections::HashMap;
 use std::sync::Arc;
 use syntect::highlighting;
-use log::trace;
 
 /// Font style
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
