@@ -14,7 +14,7 @@ pub fn feature_from_tag(tag: &str) -> Result<hb_feature_t> {
         let mut feature = mem::zeroed();
         ensure!(
             hb_feature_from_string(
-                tag.as_ptr() as *const i8,
+                tag.as_ptr() as *const ::std::os::raw::c_char,
                 tag.len() as i32,
                 &mut feature as *mut _
             ) != 0,
@@ -88,7 +88,7 @@ impl HBBuffer {
         unsafe {
             hb_buffer_add_utf8(
                 self.buffer,
-                s.as_ptr() as *const i8,
+                s.as_ptr() as *const ::std::os::raw::c_char,
                 s.len() as i32,
                 0,
                 s.len() as i32,
