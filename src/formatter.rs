@@ -15,6 +15,19 @@ pub struct ImageFormatter {
     /// pad of top of the code area
     /// Default: 50
     code_pad_top: u32,
+    /// Title bar padding
+    /// Default: 15
+    title_bar_pad: u32,
+    /// Whether to show window controls or not
+    window_controls: bool,
+    /// Width for window controls
+    /// Default: 120
+    window_controls_width: u32,
+    /// Height for window controls
+    /// Default: 40
+    window_controls_height: u32,
+    /// Window title
+    window_title: Option<String>,
     /// show line number
     /// Default: true
     line_number: bool,
@@ -38,8 +51,6 @@ pub struct ImageFormatter {
     tab_width: u8,
     /// Line Offset
     line_offset: u32,
-    /// Window title
-    window_title: Option<String>,
 }
 
 #[derive(Default)]
@@ -147,11 +158,17 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             FontCollection::new(&self.font)?
         };
 
-        let code_pad_top = if self.window_controls { 50 } else { 0 };
+        let title_bar = self.window_controls || self.window_title.is_some();
 
         Ok(ImageFormatter {
             line_pad: self.line_pad,
             code_pad: 25,
+            code_pad_top: if title_bar { 50 } else { 0 },
+            title_bar_pad: 15,
+            window_controls: self.window_controls,
+            window_controls_width: 120,
+            window_controls_height: 40,
+            window_title: self.window_title,
             line_number: self.line_number,
             line_number_pad: 6,
             line_number_chars: 0,
@@ -159,10 +176,8 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             round_corner: self.round_corner,
             shadow_adder: self.shadow_adder,
             tab_width: self.tab_width,
-            code_pad_top,
             font,
             line_offset: self.line_offset,
-            window_title: self.window_title,
         })
     }
 }
@@ -239,23 +254,25 @@ impl ImageFormatter {
         }
 
         if self.window_title.is_some() {
-            // TODO: Move all these hardcoded values
-            let ctrl_offset = 15 + 120;
-            let ctrl_center = 15 + 20;
-            let title_padding = 5;
-
             let title = self.window_title.as_ref().unwrap();
             let title_width = self.font.get_text_len(&title);
 
+            let ctrls_offset = if self.window_controls {
+                self.window_controls_width + self.title_bar_pad
+            } else {
+                0
+            };
+            let ctrls_center = self.window_controls_height / 2;
+
             drawables.push((
-                ctrl_offset + title_padding,
-                ctrl_center - self.font.get_font_height() / 2,
+                ctrls_offset + self.title_bar_pad,
+                self.title_bar_pad + ctrls_center - self.font.get_font_height() / 2,
                 None,
                 FontStyle::BOLD,
                 title.to_string(),
             ));
 
-            let title_bar_width = ctrl_offset + title_padding * 2 + title_width;
+            let title_bar_width = ctrls_offset + title_width + self.title_bar_pad * 2;
             max_width = max_width.max(title_bar_width);
         }
 
@@ -342,9 +359,14 @@ impl ImageFormatter {
                 .draw_text_mut(&mut image, color, x, y, style, &text);
         }
 
-        // draw_window_controls == true
-        if self.code_pad_top != 0 {
-            add_window_controls(&mut image);
+        if self.window_controls {
+            let params = WindowControlsParams {
+                width: self.window_controls_width,
+                height: self.window_controls_height,
+                padding: self.title_bar_pad,
+                radius: self.window_controls_width / 3 / 4,
+            };
+            add_window_controls(&mut image, &params);
         }
 
         if self.round_corner {
