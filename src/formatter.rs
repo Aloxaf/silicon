@@ -38,6 +38,8 @@ pub struct ImageFormatter {
     tab_width: u8,
     /// Line Offset
     line_offset: u32,
+    /// Window title
+    window_title: Option<String>,
 }
 
 #[derive(Default)]
@@ -52,6 +54,8 @@ pub struct ImageFormatterBuilder<S> {
     highlight_lines: Vec<u32>,
     /// Whether show the window controls
     window_controls: bool,
+    /// Window title
+    window_title: Option<String>,
     /// Whether round the corner of the image
     round_corner: bool,
     /// Shadow adder,
@@ -69,6 +73,7 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             line_pad: 2,
             line_number: true,
             window_controls: true,
+            window_title: None,
             round_corner: true,
             tab_width: 4,
             ..Default::default()
@@ -102,6 +107,12 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
     /// Whether show the windows controls
     pub fn window_controls(mut self, show: bool) -> Self {
         self.window_controls = show;
+        self
+    }
+
+    /// Window title
+    pub fn window_title(mut self, title: Option<String>) -> Self {
+        self.window_title = title;
         self
     }
 
@@ -151,6 +162,7 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             code_pad_top,
             font,
             line_offset: self.line_offset,
+            window_title: self.window_title,
         })
     }
 }
@@ -161,7 +173,7 @@ struct Drawable {
     /// max number of line of the picture
     max_lineno: u32,
     /// arguments for draw_text_mut
-    drawables: Vec<(u32, u32, Color, FontStyle, String)>,
+    drawables: Vec<(u32, u32, Option<Color>, FontStyle, String)>,
 }
 
 impl ImageFormatter {
@@ -214,7 +226,7 @@ impl ImageFormatter {
                 drawables.push((
                     width,
                     height,
-                    style.foreground,
+                    Some(style.foreground),
                     style.font_style.into(),
                     text.to_owned(),
                 ));
@@ -224,6 +236,27 @@ impl ImageFormatter {
                 max_width = max_width.max(width);
             }
             max_lineno = i as u32;
+        }
+
+        if self.window_title.is_some() {
+            // TODO: Move all these hardcoded values
+            let ctrl_offset = 15 + 120;
+            let ctrl_center = 15 + 20;
+            let title_padding = 5;
+
+            let title = self.window_title.as_ref().unwrap();
+            let title_width = self.font.get_text_len(&title);
+
+            drawables.push((
+                ctrl_offset + title_padding,
+                ctrl_center - self.font.get_font_height() / 2,
+                None,
+                FontStyle::BOLD,
+                title.to_string(),
+            ));
+
+            let title_bar_width = ctrl_offset + title_padding * 2 + title_width;
+            max_width = max_width.max(title_bar_width);
         }
 
         Drawable {
@@ -288,10 +321,8 @@ impl ImageFormatter {
         let foreground = theme.settings.foreground.unwrap();
         let background = theme.settings.background.unwrap();
 
-        let foreground = foreground.to_rgba();
-        let background = background.to_rgba();
-
-        let mut image = DynamicImage::ImageRgba8(RgbaImage::from_pixel(size.0, size.1, background));
+        let mut image =
+            DynamicImage::ImageRgba8(RgbaImage::from_pixel(size.0, size.1, background.to_rgba()));
 
         if !self.highlight_lines.is_empty() {
             let highlight_lines = self
@@ -302,11 +333,11 @@ impl ImageFormatter {
             self.highlight_lines(&mut image, highlight_lines);
         }
         if self.line_number {
-            self.draw_line_number(&mut image, drawables.max_lineno, foreground);
+            self.draw_line_number(&mut image, drawables.max_lineno, foreground.to_rgba());
         }
 
         for (x, y, color, style, text) in drawables.drawables {
-            let color = color.to_rgba();
+            let color = color.unwrap_or(foreground).to_rgba();
             self.font
                 .draw_text_mut(&mut image, color, x, y, style, &text);
         }

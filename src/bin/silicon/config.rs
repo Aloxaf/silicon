@@ -150,6 +150,10 @@ pub struct Config {
     #[structopt(long)]
     pub no_window_controls: bool,
 
+    /// Show an optional window title
+    #[structopt(long, value_name = "WINDOW_TITLE")]
+    pub window_title: Option<String>,
+
     /// Hide the line number.
     #[structopt(long)]
     pub no_line_number: bool,
@@ -269,10 +273,10 @@ impl Config {
         let formatter = ImageFormatterBuilder::new()
             .line_pad(self.line_pad)
             .window_controls(!self.no_window_controls)
+            .window_title(self.window_title.clone())
             .line_number(!self.no_line_number)
             .font(self.font.clone().unwrap_or_default())
             .round_corner(!self.no_round_corner)
-            .window_controls(!self.no_window_controls)
             .shadow_adder(self.get_shadow_adder()?)
             .tab_width(self.tab_width)
             .highlight_lines(self.highlight_lines.clone().unwrap_or_default())
