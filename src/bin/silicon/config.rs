@@ -150,7 +150,7 @@ pub struct Config {
     #[structopt(long)]
     pub no_window_controls: bool,
 
-    /// Show an optional window title
+    /// Show window title
     #[structopt(long, value_name = "WINDOW_TITLE")]
     pub window_title: Option<String>,
 

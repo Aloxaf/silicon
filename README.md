@@ -120,6 +120,12 @@ The color can be `#RGB[A]` or `#RRGGBB[AA]`
 silicon ./target/test.rs -o test.png --background '#fff0'
 ```
 
+Show window title
+
+```bash
+silicon ./target/test.rs -o test.png --window-title "target/test.rs"
+```
+
 see `silicon --help` for detail
 
 ## Adding new syntaxes / themes
