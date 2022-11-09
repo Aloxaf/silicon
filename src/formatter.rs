@@ -255,7 +255,7 @@ impl ImageFormatter {
 
         if self.window_title.is_some() {
             let title = self.window_title.as_ref().unwrap();
-            let title_width = self.font.get_text_len(&title);
+            let title_width = self.font.get_text_len(title);
 
             let ctrls_offset = if self.window_controls {
                 self.window_controls_width + self.title_bar_pad
