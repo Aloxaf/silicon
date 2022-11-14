@@ -15,6 +15,19 @@ pub struct ImageFormatter {
     /// pad of top of the code area
     /// Default: 50
     code_pad_top: u32,
+    /// Title bar padding
+    /// Default: 15
+    title_bar_pad: u32,
+    /// Whether to show window controls or not
+    window_controls: bool,
+    /// Width for window controls
+    /// Default: 120
+    window_controls_width: u32,
+    /// Height for window controls
+    /// Default: 40
+    window_controls_height: u32,
+    /// Window title
+    window_title: Option<String>,
     /// show line number
     /// Default: true
     line_number: bool,
@@ -52,6 +65,8 @@ pub struct ImageFormatterBuilder<S> {
     highlight_lines: Vec<u32>,
     /// Whether show the window controls
     window_controls: bool,
+    /// Window title
+    window_title: Option<String>,
     /// Whether round the corner of the image
     round_corner: bool,
     /// Shadow adder,
@@ -69,6 +84,7 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             line_pad: 2,
             line_number: true,
             window_controls: true,
+            window_title: None,
             round_corner: true,
             tab_width: 4,
             ..Default::default()
@@ -105,6 +121,12 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
         self
     }
 
+    /// Window title
+    pub fn window_title(mut self, title: Option<String>) -> Self {
+        self.window_title = title;
+        self
+    }
+
     /// Whether round the corner
     pub fn round_corner(mut self, b: bool) -> Self {
         self.round_corner = b;
@@ -136,11 +158,17 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             FontCollection::new(&self.font)?
         };
 
-        let code_pad_top = if self.window_controls { 50 } else { 0 };
+        let title_bar = self.window_controls || self.window_title.is_some();
 
         Ok(ImageFormatter {
             line_pad: self.line_pad,
             code_pad: 25,
+            code_pad_top: if title_bar { 50 } else { 0 },
+            title_bar_pad: 15,
+            window_controls: self.window_controls,
+            window_controls_width: 120,
+            window_controls_height: 40,
+            window_title: self.window_title,
             line_number: self.line_number,
             line_number_pad: 6,
             line_number_chars: 0,
@@ -148,7 +176,6 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             round_corner: self.round_corner,
             shadow_adder: self.shadow_adder,
             tab_width: self.tab_width,
-            code_pad_top,
             font,
             line_offset: self.line_offset,
         })
@@ -161,7 +188,7 @@ struct Drawable {
     /// max number of line of the picture
     max_lineno: u32,
     /// arguments for draw_text_mut
-    drawables: Vec<(u32, u32, Color, FontStyle, String)>,
+    drawables: Vec<(u32, u32, Option<Color>, FontStyle, String)>,
 }
 
 impl ImageFormatter {
@@ -214,7 +241,7 @@ impl ImageFormatter {
                 drawables.push((
                     width,
                     height,
-                    style.foreground,
+                    Some(style.foreground),
                     style.font_style.into(),
                     text.to_owned(),
                 ));
@@ -224,6 +251,29 @@ impl ImageFormatter {
                 max_width = max_width.max(width);
             }
             max_lineno = i as u32;
+        }
+
+        if self.window_title.is_some() {
+            let title = self.window_title.as_ref().unwrap();
+            let title_width = self.font.get_text_len(title);
+
+            let ctrls_offset = if self.window_controls {
+                self.window_controls_width + self.title_bar_pad
+            } else {
+                0
+            };
+            let ctrls_center = self.window_controls_height / 2;
+
+            drawables.push((
+                ctrls_offset + self.title_bar_pad,
+                self.title_bar_pad + ctrls_center - self.font.get_font_height() / 2,
+                None,
+                FontStyle::BOLD,
+                title.to_string(),
+            ));
+
+            let title_bar_width = ctrls_offset + title_width + self.title_bar_pad * 2;
+            max_width = max_width.max(title_bar_width);
         }
 
         Drawable {
@@ -288,10 +338,8 @@ impl ImageFormatter {
         let foreground = theme.settings.foreground.unwrap();
         let background = theme.settings.background.unwrap();
 
-        let foreground = foreground.to_rgba();
-        let background = background.to_rgba();
-
-        let mut image = DynamicImage::ImageRgba8(RgbaImage::from_pixel(size.0, size.1, background));
+        let mut image =
+            DynamicImage::ImageRgba8(RgbaImage::from_pixel(size.0, size.1, background.to_rgba()));
 
         if !self.highlight_lines.is_empty() {
             let highlight_lines = self
@@ -302,18 +350,23 @@ impl ImageFormatter {
             self.highlight_lines(&mut image, highlight_lines);
         }
         if self.line_number {
-            self.draw_line_number(&mut image, drawables.max_lineno, foreground);
+            self.draw_line_number(&mut image, drawables.max_lineno, foreground.to_rgba());
         }
 
         for (x, y, color, style, text) in drawables.drawables {
-            let color = color.to_rgba();
+            let color = color.unwrap_or(foreground).to_rgba();
             self.font
                 .draw_text_mut(&mut image, color, x, y, style, &text);
         }
 
-        // draw_window_controls == true
-        if self.code_pad_top != 0 {
-            add_window_controls(&mut image);
+        if self.window_controls {
+            let params = WindowControlsParams {
+                width: self.window_controls_width,
+                height: self.window_controls_height,
+                padding: self.title_bar_pad,
+                radius: self.window_controls_width / 3 / 4,
+            };
+            add_window_controls(&mut image, &params);
         }
 
         if self.round_corner {
