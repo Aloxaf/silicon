@@ -288,7 +288,7 @@ impl ImageFormatter {
             *i = (*i).saturating_sub(20);
         }
         for i in 0..=lineno {
-            let line_mumber = format!(
+            let line_number = format!(
                 "{:>width$}",
                 i + self.line_offset,
                 width = self.line_number_chars as usize
@@ -299,7 +299,7 @@ impl ImageFormatter {
                 self.code_pad,
                 self.get_line_y(i),
                 FontStyle::REGULAR,
-                &line_mumber,
+                &line_number,
             );
         }
     }
