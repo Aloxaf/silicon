@@ -7,7 +7,7 @@
 //! use silicon::font::{FontCollection, FontStyle};
 //!
 //! let mut image = RgbImage::new(250, 100);
-//! let font = FontCollection::new(&[("Hack", 27.0), ("FiraCode", 27.0)]).unwrap();
+//! let font = FontCollection::new(&[("Hack", 27.0), ("FiraCode", 27.0)],FontStyle::REGULAR).unwrap();
 //!
 //! font.draw_text_mut(&mut image, Rgb([255, 0, 0]), 0, 0, FontStyle::REGULAR, "Hello, world");
 //! ```
@@ -30,8 +30,9 @@ use std::sync::Arc;
 use syntect::highlighting;
 
 /// Font style
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Default)]
 pub enum FontStyle {
+    #[default]
     REGULAR,
     ITALIC,
     BOLD,
@@ -63,6 +64,7 @@ use FontStyle::*;
 pub struct ImageFont {
     pub fonts: HashMap<FontStyle, Font>,
     pub size: f32,
+    pub style: FontStyle,
 }
 
 impl Default for ImageFont {
@@ -92,16 +94,21 @@ impl Default for ImageFont {
             fonts.insert(style, font);
         }
 
-        Self { fonts, size: 26.0 }
+        Self {
+            fonts,
+            size: 26.0,
+            ..Default::default()
+        }
     }
 }
 
 impl ImageFont {
-    pub fn new(name: &str, size: f32) -> Result<Self, FontError> {
+    pub fn new(name: &str, size: f32, style: FontStyle) -> Result<Self, FontError> {
         // Silicon already contains Hack font
         if name == "Hack" {
             let font = ImageFont {
                 size,
+                style,
                 ..Default::default()
             };
             return Ok(font);
@@ -145,7 +152,7 @@ impl ImageFont {
             }
         }
 
-        Ok(Self { fonts, size })
+        Ok(Self { fonts, size, style })
     }
 
     /// Get a font by style. If there is no such a font, it will return the REGULAR font.
@@ -162,7 +169,8 @@ impl ImageFont {
 
     /// Get the height of the font
     pub fn get_font_height(&self) -> u32 {
-        let font = self.get_regular();
+        debug!("current font style:{:?}", self.style);
+        let font = self.get_by_style(self.style);
         let metrics = font.metrics();
         ((metrics.ascent - metrics.descent) / metrics.units_per_em as f32 * self.size).ceil() as u32
     }
@@ -182,11 +190,14 @@ impl Default for FontCollection {
 
 impl FontCollection {
     /// Create a FontCollection with several fonts.
-    pub fn new<S: AsRef<str>>(font_list: &[(S, f32)]) -> Result<Self, FontError> {
+    pub fn new<S: AsRef<str>>(
+        font_list: &[(S, f32)],
+        font_style: FontStyle,
+    ) -> Result<Self, FontError> {
         let mut fonts = vec![];
         for (name, size) in font_list {
             let name = name.as_ref();
-            match ImageFont::new(name, *size) {
+            match ImageFont::new(name, *size, font_style) {
                 Ok(font) => fonts.push(font),
                 Err(err) => eprintln!("[error] Error occurs when load font `{}`: {}", name, err),
             }
@@ -331,8 +342,8 @@ impl FontCollection {
     }
 
     /// Get the width of the given text
-    pub fn get_text_len(&self, text: &str) -> u32 {
-        self.layout(text, REGULAR).1
+    pub fn get_text_len(&self, text: &str, style: FontStyle) -> u32 {
+        self.layout(text, style).1
     }
 
     /// Draw the text to a image
@@ -350,7 +361,7 @@ impl FontCollection {
         I: GenericImage,
         <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp<f32>,
     {
-        let metrics = self.0[0].get_regular().metrics();
+        let metrics = self.0[0].get_by_style(style).metrics();
         let offset =
             (metrics.descent / metrics.units_per_em as f32 * self.0[0].size).round() as i32;
 

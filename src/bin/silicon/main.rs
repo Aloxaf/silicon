@@ -121,7 +121,7 @@ fn run() -> Result<(), Error> {
 
     let mut formatter = config.get_formatter()?;
 
-    let image = formatter.format(&highlight, &theme);
+    let image = formatter.format(&highlight, &theme, config.font_style);
 
     if config.to_clipboard {
         dump_image_to_clipboard(&image)?;

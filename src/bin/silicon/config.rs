@@ -2,6 +2,7 @@ use anyhow::{Context, Error};
 use clipboard::{ClipboardContext, ClipboardProvider};
 use image::Rgba;
 use silicon::directories::PROJECT_DIRS;
+use silicon::font::FontStyle;
 use silicon::formatter::{ImageFormatter, ImageFormatterBuilder};
 use silicon::utils::{Background, ShadowAdder, ToRgba};
 use std::ffi::OsString;
@@ -55,6 +56,17 @@ fn parse_font_str(s: &str) -> Vec<(String, f32)> {
         result.push((font_name, font_size));
     }
     result
+}
+
+fn parse_font_style_str(s: &str) -> FontStyle {
+    let s = s.to_lowercase();
+    match s.as_str() {
+        "regular" => FontStyle::REGULAR,
+        "italic" => FontStyle::ITALIC,
+        "bold" => FontStyle::BOLD,
+        "bolditalic" => FontStyle::BOLDITALIC,
+        _ => panic!("parse font_style error"),
+    }
 }
 
 fn parse_line_range(s: &str) -> Result<Vec<u32>, ParseIntError> {
@@ -112,6 +124,10 @@ pub struct Config {
     /// The fallback font list. eg. 'Hack; SimSun=31'
     #[structopt(long, short, value_name = "FONT", parse(from_str = parse_font_str))]
     pub font: Option<FontList>,
+
+    /// The font style. eg. 'regular'
+    #[structopt(long, value_name = "FONT_STYLE",default_value="regular", parse(from_str = parse_font_style_str))]
+    pub font_style: FontStyle,
 
     /// Lines to high light. rg. '1-3; 4'
     #[structopt(long, value_name = "LINES", parse(try_from_str = parse_line_range))]
@@ -276,6 +292,7 @@ impl Config {
             .window_title(self.window_title.clone())
             .line_number(!self.no_line_number)
             .font(self.font.clone().unwrap_or_default())
+            .font_style(self.font_style.clone())
             .round_corner(!self.no_round_corner)
             .shadow_adder(self.get_shadow_adder()?)
             .tab_width(self.tab_width)

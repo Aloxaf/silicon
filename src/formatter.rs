@@ -43,6 +43,9 @@ pub struct ImageFormatter {
     /// font of english character, should be mono space font
     /// Default: Hack (builtin)
     font: FontCollection,
+    /// font of english character, should be mono space font
+    /// Default: Hack (builtin)
+    font_style: FontStyle,
     /// Highlight lines
     highlight_lines: Vec<u32>,
     /// Shadow adder
@@ -61,6 +64,8 @@ pub struct ImageFormatterBuilder<S> {
     line_number: bool,
     /// Font of english character, should be mono space font
     font: Vec<(S, f32)>,
+    /// FontStyle of font
+    font_style: FontStyle,
     /// Highlight lines
     highlight_lines: Vec<u32>,
     /// Whether show the window controls
@@ -115,6 +120,12 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
         self
     }
 
+    /// Set the font
+    pub fn font_style(mut self, font_style: FontStyle) -> Self {
+        self.font_style = font_style;
+        self
+    }
+
     /// Whether show the windows controls
     pub fn window_controls(mut self, show: bool) -> Self {
         self.window_controls = show;
@@ -155,7 +166,7 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
         let font = if self.font.is_empty() {
             FontCollection::default()
         } else {
-            FontCollection::new(&self.font)?
+            FontCollection::new(&self.font, self.font_style)?
         };
 
         let title_bar = self.window_controls || self.window_title.is_some();
@@ -177,6 +188,7 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             shadow_adder: self.shadow_adder,
             tab_width: self.tab_width,
             font,
+            font_style: self.font_style,
             line_offset: self.line_offset,
         })
     }
@@ -215,14 +227,14 @@ impl ImageFormatter {
         self.code_pad
             + if self.line_number {
                 let tmp = format!("{:>width$}", 0, width = self.line_number_chars as usize);
-                2 * self.line_number_pad + self.font.get_text_len(&tmp)
+                2 * self.line_number_pad + self.font.get_text_len(&tmp, self.font_style)
             } else {
                 0
             }
     }
 
     /// create
-    fn create_drawables(&self, v: &[Vec<(Style, &str)>]) -> Drawable {
+    fn create_drawables(&self, v: &[Vec<(Style, &str)>], style: FontStyle) -> Drawable {
         // tab should be replaced to whitespace so that it can be rendered correctly
         let tab = " ".repeat(self.tab_width as usize);
         let mut drawables = vec![];
@@ -232,21 +244,23 @@ impl ImageFormatter {
             let height = self.get_line_y(i as u32);
             let mut width = self.get_left_pad();
 
-            for (style, text) in tokens {
+            for (style_, text) in tokens {
                 let text = text.trim_end_matches('\n').replace('\t', &tab);
                 if text.is_empty() {
                     continue;
                 }
 
-                drawables.push((
-                    width,
-                    height,
-                    Some(style.foreground),
-                    style.font_style.into(),
-                    text.to_owned(),
-                ));
+                if style == style_.font_style.into() {
+                    drawables.push((
+                        width,
+                        height,
+                        Some(style_.foreground),
+                        style,
+                        text.to_owned(),
+                    ));
+                }
 
-                width += self.font.get_text_len(&text);
+                width += self.font.get_text_len(&text, self.font_style);
 
                 max_width = max_width.max(width);
             }
@@ -255,7 +269,7 @@ impl ImageFormatter {
 
         if self.window_title.is_some() {
             let title = self.window_title.as_ref().unwrap();
-            let title_width = self.font.get_text_len(title);
+            let title_width = self.font.get_text_len(title, self.font_style);
 
             let ctrls_offset = if self.window_controls {
                 self.window_controls_width + self.title_bar_pad
@@ -268,7 +282,7 @@ impl ImageFormatter {
                 ctrls_offset + self.title_bar_pad,
                 self.title_bar_pad + ctrls_center - self.font.get_font_height() / 2,
                 None,
-                FontStyle::BOLD,
+                style,
                 title.to_string(),
             ));
 
@@ -298,7 +312,7 @@ impl ImageFormatter {
                 color,
                 self.code_pad,
                 self.get_line_y(i),
-                FontStyle::REGULAR,
+                self.font_style,
                 &line_mumber,
             );
         }
@@ -322,7 +336,12 @@ impl ImageFormatter {
     }
 
     // TODO: use &T instead of &mut T ?
-    pub fn format(&mut self, v: &[Vec<(Style, &str)>], theme: &Theme) -> DynamicImage {
+    pub fn format(
+        &mut self,
+        v: &[Vec<(Style, &str)>],
+        theme: &Theme,
+        style: FontStyle,
+    ) -> DynamicImage {
         if self.line_number {
             self.line_number_chars =
                 (((v.len() + self.line_offset as usize) as f32).log10() + 1.0).floor() as u32;
@@ -331,7 +350,7 @@ impl ImageFormatter {
             self.line_number_pad = 0;
         }
 
-        let drawables = self.create_drawables(v);
+        let drawables = self.create_drawables(v, style);
 
         let size = self.get_image_size(drawables.max_width, drawables.max_lineno);
 

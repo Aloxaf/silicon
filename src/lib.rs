@@ -8,6 +8,7 @@
 //! use silicon::utils::ShadowAdder;
 //! use silicon::formatter::ImageFormatterBuilder;
 //! use silicon::assets::HighlightingAssets;
+//! use silicon::font::FontStyle;
 //!
 //! let ha = HighlightingAssets::new();
 //! let (ps, ts) = (ha.syntax_set, ha.theme_set);
@@ -30,7 +31,7 @@
 //!     .shadow_adder(ShadowAdder::default())
 //!     .build()
 //!     .unwrap();
-//! let image = formatter.format(&highlight, theme);
+//! let image = formatter.format(&highlight, theme,FontStyle::REGULAR);
 //!
 //! image.save("hello.png").unwrap();
 //! ```
