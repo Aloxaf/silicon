@@ -65,7 +65,11 @@ sudo apt install pkg-config libasound2-dev libssl-dev cmake libfreetype6-dev lib
 
 ### Fedora
 ```bash
-sudo dnf install cmake expat-devel libxcb-devel freetype-devel libxml2-devel harfbuzz
+sudo dnf install \
+  cmake \
+  expat-devel fontconfig-devel libxcb-devel \
+  freetype-devel libxml2-devel \
+  harfbuzz
 ```
 
 ### Arch Linux
