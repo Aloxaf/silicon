@@ -46,3 +46,4 @@ pub mod formatter;
 #[cfg(feature = "harfbuzz")]
 pub mod hb_wrapper;
 pub mod utils;
+mod imageproc;

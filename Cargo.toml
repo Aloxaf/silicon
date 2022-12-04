@@ -18,7 +18,6 @@ harfbuzz = ["harfbuzz-sys", "font-kit/loader-freetype-default", "font-kit/source
 
 [dependencies]
 dirs = "4.0"
-imageproc = "0.23.0"
 clipboard = "0.5.0"
 tempfile = "3.1.0"
 conv = "0.3.3"
