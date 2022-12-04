@@ -14,6 +14,7 @@
 use crate::error::FontError;
 #[cfg(feature = "harfbuzz")]
 use crate::hb_wrapper::{feature_from_tag, HBBuffer, HBFont};
+use crate::imageproc::{weighted_sum, Clamp};
 use anyhow::Result;
 use conv::ValueInto;
 use font_kit::canvas::{Canvas, Format, RasterizationOptions};
@@ -22,8 +23,6 @@ use font_kit::hinting::HintingOptions;
 use font_kit::properties::{Properties, Style, Weight};
 use font_kit::source::SystemSource;
 use image::{GenericImage, Pixel};
-use imageproc::definitions::Clamp;
-use imageproc::pixelops::weighted_sum;
 use pathfinder_geometry::transform2d::Transform2F;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -348,7 +347,7 @@ impl FontCollection {
     ) -> u32
     where
         I: GenericImage,
-        <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp<f32>,
+        <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp,
     {
         let metrics = self.0[0].get_regular().metrics();
         let offset =
