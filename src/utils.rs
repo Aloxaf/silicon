@@ -303,7 +303,7 @@ pub(crate) fn round_corner(image: &mut DynamicImage, radius: u32) {
     image.copy_from(&*part, 0, 0).unwrap();
 
     // top right
-    let part = crop_imm(&circle, radius + 1, 1, radius, radius);
+    let part = crop_imm(&circle, radius + 1, 1, radius, radius - 1);
     image.copy_from(&*part, width - radius, 0).unwrap();
 
     // bottom left
