@@ -14,6 +14,12 @@ pub struct HighlightingAssets {
     pub theme_set: ThemeSet,
 }
 
+impl Default for HighlightingAssets {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HighlightingAssets {
     pub fn new() -> Self {
         Self::from_dump_file().unwrap_or_else(|_| Self {

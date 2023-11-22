@@ -86,7 +86,7 @@ pub(crate) fn add_window_controls(image: &mut DynamicImage, params: &WindowContr
 
     let mut title_bar = RgbaImage::from_pixel(params.width * 3, params.height * 3, background);
     let step = (params.radius * 2) as i32;
-    let spacer = (step * 2) as i32;
+    let spacer = step * 2;
     let center_y = (params.height / 2) as i32;
 
     for (i, (fill, outline)) in color.iter().enumerate() {
