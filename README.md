@@ -9,7 +9,7 @@ Silicon is an alternative to [Carbon](https://github.com/dawnlabs/carbon) implem
 
 It can render your source code into a beautiful image.
 
-<img width="66%" src="http://storage.aloxaf.cn/silicon.png?v=2">
+<img width="66%" src="example/example.png">
 
 ## Why Silicon
 

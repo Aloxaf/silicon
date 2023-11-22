@@ -59,10 +59,9 @@ pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
                     temp.path().to_str().unwrap(),
                 ])
                 .status()
-                .map_err(|e| format_err!("Failed to copy image to clipboard: {}", e))?;
+                .map_err(|e| format_err!("Failed to copy image to clipboard: {} (Tip: do you have xclip installed ?)", e))?;
         }
     };
-
     Ok(())
 }
 

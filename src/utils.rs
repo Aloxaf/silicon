@@ -269,31 +269,48 @@ pub(crate) fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
 pub(crate) fn round_corner(image: &mut DynamicImage, radius: u32) {
     // draw a circle with given foreground on given background
     // then split it into four pieces and paste them to the four corner of the image
+    //
+    // the circle is drawn on a bigger image to avoid the aliasing
+    // later it will be scaled to the correct size
+    // we add +1 (to the radius) to make sure that there is also space for the border to mitigate artefacts when scaling
+    // note that the +1 isn't added to the radius when drawing the circle
     let mut circle =
-        RgbaImage::from_pixel(radius * 2 + 1, radius * 2 + 1, Rgba([255, 255, 255, 0]));
+        RgbaImage::from_pixel((radius + 1) * 4, (radius + 1) * 4, Rgba([255, 255, 255, 0]));
 
     let width = image.width();
     let height = image.height();
 
+    // use the bottom right pixel to get the color of the foreground
     let foreground = image.get_pixel(width - 1, height - 1);
 
-    // TODO: need a blur on edge
     draw_filled_circle_mut(
         &mut circle,
-        (radius as i32, radius as i32),
-        radius as i32,
+        (((radius + 1) * 2) as i32, ((radius + 1) * 2) as i32),
+        radius as i32 * 2,
         foreground,
     );
 
-    let part = crop_imm(&circle, 0, 0, radius, radius);
+    // scale down the circle to the correct size
+    let circle = resize(
+        &circle,
+        (radius + 1) * 2,
+        (radius + 1) * 2,
+        FilterType::Triangle,
+    );
+
+    // top left
+    let part = crop_imm(&circle, 1, 1, radius, radius);
     image.copy_from(&*part, 0, 0).unwrap();
 
-    let part = crop_imm(&circle, radius + 1, 0, radius, radius);
+    // top right
+    let part = crop_imm(&circle, radius + 1, 1, radius, radius - 1);
     image.copy_from(&*part, width - radius, 0).unwrap();
 
-    let part = crop_imm(&circle, 0, radius + 1, radius, radius);
+    // bottom left
+    let part = crop_imm(&circle, 1, radius + 1, radius, radius);
     image.copy_from(&*part, 0, height - radius).unwrap();
 
+    // bottom right
     let part = crop_imm(&circle, radius + 1, radius + 1, radius, radius);
     image
         .copy_from(&*part, width - radius, height - radius)
