@@ -14,6 +14,7 @@ use {
 };
 #[cfg(target_os = "macos")]
 use {image::ImageOutputFormat, pasteboard::Pasteboard};
+
 #[cfg(target_os = "linux")]
 use {image::ImageOutputFormat, std::process::Command};
 
@@ -24,18 +25,43 @@ use silicon::directories::PROJECT_DIRS;
 
 #[cfg(target_os = "linux")]
 pub fn dump_image_to_clipboard(image: &DynamicImage) -> Result<(), Error> {
-    let mut temp = tempfile::NamedTempFile::new()?;
-    image.write_to(&mut temp, ImageOutputFormat::Png)?;
-    Command::new("xclip")
-        .args([
-            "-sel",
-            "clip",
-            "-t",
-            "image/png",
-            temp.path().to_str().unwrap(),
-        ])
-        .status()
-        .map_err(|e| format_err!("Failed to copy image to clipboard : {} (Tip: do you have xclip installed ?)", e))?;
+    use std::io::{Cursor, Write};
+
+    match std::env::var(r#"XDG_SESSION_TYPE"#).ok() {
+        Some(x) if x == "wayland" => {
+            let mut command = Command::new("wl-copy")
+                .args(["--type", "image/png"])
+                .stdin(std::process::Stdio::piped())
+                .spawn()?;
+
+            let mut cursor = Cursor::new(Vec::new());
+            image.write_to(&mut cursor, ImageOutputFormat::Png)?;
+
+            {
+                let stdin = command.stdin.as_mut().unwrap();
+                stdin.write_all(cursor.get_ref())?;
+            }
+
+            command
+                .wait()
+                .map_err(|e| format_err!("Failed to copy image to clipboard: {}", e))?;
+        }
+        _ => {
+            let mut temp = tempfile::NamedTempFile::new()?;
+            image.write_to(&mut temp, ImageOutputFormat::Png)?;
+
+            Command::new(r#"xclip"#)
+                .args([
+                    "-sel",
+                    "clip",
+                    "-t",
+                    "image/png",
+                    temp.path().to_str().unwrap(),
+                ])
+                .status()
+                .map_err(|e| format_err!("Failed to copy image to clipboard: {} (Tip: do you have xclip installed ?)", e))?;
+        }
+    };
     Ok(())
 }
 
