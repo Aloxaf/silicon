@@ -265,7 +265,7 @@ impl Config {
             Ok(theme.clone())
         } else {
             ThemeSet::get_theme(&self.theme)
-                .context(format!("Canot load the theme: {}", self.theme))
+                .context(format!("Cannot load the theme: {}", self.theme))
         }
     }
 
