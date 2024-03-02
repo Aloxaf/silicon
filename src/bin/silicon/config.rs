@@ -2,6 +2,7 @@ use anyhow::{Context, Error};
 use clipboard::{ClipboardContext, ClipboardProvider};
 use image::Rgba;
 use silicon::directories::PROJECT_DIRS;
+use silicon::font::FontCollection;
 use silicon::formatter::{ImageFormatter, ImageFormatterBuilder};
 use silicon::utils::{Background, ShadowAdder, ToRgba};
 use std::ffi::OsString;
@@ -269,7 +270,7 @@ impl Config {
         }
     }
 
-    pub fn get_formatter(&self) -> Result<ImageFormatter, Error> {
+    pub fn get_formatter(&self) -> Result<ImageFormatter<FontCollection>, Error> {
         let formatter = ImageFormatterBuilder::new()
             .line_pad(self.line_pad)
             .window_controls(!self.no_window_controls)

@@ -1,7 +1,7 @@
 use crate::error::ParseColorError;
 use image::imageops::{crop_imm, resize, FilterType};
 use image::Pixel;
-use image::{DynamicImage, GenericImage, GenericImageView, Rgba, RgbaImage};
+use image::{GenericImage, GenericImageView, Rgba, RgbaImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut};
 use imageproc::rect::Rect;
 
@@ -74,17 +74,17 @@ pub struct WindowControlsParams {
 }
 
 /// Add the window controls for image
-pub(crate) fn add_window_controls(image: &mut DynamicImage, params: &WindowControlsParams) {
+pub(crate) fn add_window_controls(image: &mut RgbaImage, params: &WindowControlsParams) {
     let color = [
         ("#FF5F56", "#E0443E"),
         ("#FFBD2E", "#DEA123"),
         ("#27C93F", "#1AAB29"),
     ];
 
-    let mut background = image.get_pixel(37, 37);
+    let background = image.get_pixel_mut(37, 37);
     background.0[3] = 0;
 
-    let mut title_bar = RgbaImage::from_pixel(params.width * 3, params.height * 3, background);
+    let mut title_bar = RgbaImage::from_pixel(params.width * 3, params.height * 3, *background);
     let step = (params.radius * 2) as i32;
     let spacer = step * 2;
     let center_y = (params.height / 2) as i32;
@@ -112,12 +112,7 @@ pub(crate) fn add_window_controls(image: &mut DynamicImage, params: &WindowContr
         FilterType::Triangle,
     );
 
-    copy_alpha(
-        &title_bar,
-        image.as_mut_rgba8().unwrap(),
-        params.padding,
-        params.padding,
-    );
+    copy_alpha(&title_bar, image, params.padding, params.padding);
 }
 
 #[derive(Clone, Debug)]
@@ -204,7 +199,7 @@ impl ShadowAdder {
         self
     }
 
-    pub fn apply_to(&self, image: &DynamicImage) -> DynamicImage {
+    pub fn apply_to(&self, image: &RgbaImage) -> RgbaImage {
         // the size of the final image
         let width = image.width() + self.pad_horiz * 2;
         let height = image.height() + self.pad_vert * 2;
@@ -226,14 +221,9 @@ impl ShadowAdder {
         // shadow = blur(&shadow, self.blur_radius);
 
         // copy the original image to the top of it
-        copy_alpha(
-            image.as_rgba8().unwrap(),
-            &mut shadow,
-            self.pad_horiz,
-            self.pad_vert,
-        );
+        copy_alpha(image, &mut shadow, self.pad_horiz, self.pad_vert);
 
-        DynamicImage::ImageRgba8(shadow)
+        shadow
     }
 }
 
@@ -266,7 +256,7 @@ pub(crate) fn copy_alpha(src: &RgbaImage, dst: &mut RgbaImage, x: u32, y: u32) {
 }
 
 /// Round the corner of the image
-pub(crate) fn round_corner(image: &mut DynamicImage, radius: u32) {
+pub(crate) fn round_corner(image: &mut RgbaImage, radius: u32) {
     // draw a circle with given foreground on given background
     // then split it into four pieces and paste them to the four corner of the image
     //
@@ -287,7 +277,7 @@ pub(crate) fn round_corner(image: &mut DynamicImage, radius: u32) {
         &mut circle,
         (((radius + 1) * 2) as i32, ((radius + 1) * 2) as i32),
         radius as i32 * 2,
-        foreground,
+        *foreground,
     );
 
     // scale down the circle to the correct size

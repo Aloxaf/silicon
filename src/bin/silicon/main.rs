@@ -148,6 +148,7 @@ fn run() -> Result<(), Error> {
     let mut formatter = config.get_formatter()?;
 
     let image = formatter.format(&highlight, &theme);
+    let image = DynamicImage::ImageRgba8(image);
 
     if config.to_clipboard {
         dump_image_to_clipboard(&image)?;

@@ -21,13 +21,53 @@ use font_kit::font::Font;
 use font_kit::hinting::HintingOptions;
 use font_kit::properties::{Properties, Style, Weight};
 use font_kit::source::SystemSource;
-use image::{GenericImage, Pixel};
+use image::{GenericImage, Pixel, Rgba, RgbaImage};
 use imageproc::definitions::Clamp;
 use imageproc::pixelops::weighted_sum;
 use pathfinder_geometry::transform2d::Transform2F;
 use std::collections::HashMap;
 use std::sync::Arc;
 use syntect::highlighting;
+
+/// a single line text drawer
+pub trait TextLineDrawer {
+    /// get the height of the text
+    fn height(&mut self, text: &str) -> u32;
+    /// get the width of the text
+    fn width(&mut self, text: &str) -> u32;
+    /// draw the text
+    fn draw_text(
+        &mut self,
+        image: &mut RgbaImage,
+        color: Rgba<u8>,
+        x: u32,
+        y: u32,
+        font_style: FontStyle,
+        text: &str,
+    );
+}
+
+impl TextLineDrawer for FontCollection {
+    fn height(&mut self, _text: &str) -> u32 {
+        self.get_font_height()
+    }
+
+    fn width(&mut self, text: &str) -> u32 {
+        self.layout(text, REGULAR).1
+    }
+
+    fn draw_text(
+        &mut self,
+        image: &mut RgbaImage,
+        color: Rgba<u8>,
+        x: u32,
+        y: u32,
+        font_style: FontStyle,
+        text: &str,
+    ) {
+        self.draw_text_mut(image, color, x, y, font_style, text);
+    }
+}
 
 /// Font style
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -172,11 +212,15 @@ impl ImageFont {
 ///
 /// It can be used to draw text on the image.
 #[derive(Debug)]
-pub struct FontCollection(Vec<ImageFont>);
+pub struct FontCollection {
+    fonts: Vec<ImageFont>,
+}
 
 impl Default for FontCollection {
     fn default() -> Self {
-        Self(vec![ImageFont::default()])
+        Self {
+            fonts: vec![ImageFont::default()],
+        }
     }
 }
 
@@ -191,11 +235,11 @@ impl FontCollection {
                 Err(err) => eprintln!("[error] Error occurs when load font `{}`: {}", name, err),
             }
         }
-        Ok(Self(fonts))
+        Ok(Self { fonts })
     }
 
     fn glyph_for_char(&self, c: char, style: FontStyle) -> Option<(u32, &ImageFont, &Font)> {
-        for font in &self.0 {
+        for font in &self.fonts {
             let result = font.get_by_style(style);
             if let Some(id) = result.glyph_for_char(c) {
                 return Some((id, font, result));
@@ -207,7 +251,7 @@ impl FontCollection {
 
     /// get max height of all the fonts
     pub fn get_font_height(&self) -> u32 {
-        self.0
+        self.fonts
             .iter()
             .map(|font| font.get_font_height())
             .max()
@@ -350,9 +394,9 @@ impl FontCollection {
         I: GenericImage,
         <I::Pixel as Pixel>::Subpixel: ValueInto<f32> + Clamp<f32>,
     {
-        let metrics = self.0[0].get_regular().metrics();
+        let metrics = self.fonts[0].get_regular().metrics();
         let offset =
-            (metrics.descent / metrics.units_per_em as f32 * self.0[0].size).round() as i32;
+            (metrics.descent / metrics.units_per_em as f32 * self.fonts[0].size).round() as i32;
 
         let (glyphs, width) = self.layout(text, style);
 
@@ -372,6 +416,7 @@ impl FontCollection {
     }
 }
 
+#[derive(Debug)]
 struct PositionedGlyph {
     id: u32,
     font: Font,
