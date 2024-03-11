@@ -105,7 +105,7 @@ EOF
 Highlight specified line
 
 ```bash
-silicon main.rs -o main.png --highlight-lines '1; 3-4'
+silicon main.rs -o main.png --highlight-lines '1;3-4'
 ```
 
 Custom the image
