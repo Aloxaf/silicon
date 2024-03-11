@@ -114,7 +114,7 @@ pub struct Config {
     #[structopt(long, short, value_name = "FONT", parse(from_str = parse_font_str))]
     pub font: Option<FontList>,
 
-    /// Lines to high light. rg. '1-3; 4'
+    /// Lines to highlight. eg. '1-3;4'
     #[structopt(long, value_name = "LINES", parse(try_from_str = parse_line_range))]
     pub highlight_lines: Option<Lines>,
 
@@ -125,6 +125,10 @@ pub struct Config {
     /// Pad between lines
     #[structopt(long, value_name = "PAD", default_value = "2")]
     pub line_pad: u32,
+
+    /// Add PAD padding to the right of the code.
+    #[structopt(long, value_name = "PAD", default_value = "25")]
+    pub code_pad_right: u32,
 
     /// Line number offset
     #[structopt(long, value_name = "OFFSET", default_value = "1")]
@@ -281,7 +285,8 @@ impl Config {
             .shadow_adder(self.get_shadow_adder()?)
             .tab_width(self.tab_width)
             .highlight_lines(self.highlight_lines.clone().unwrap_or_default())
-            .line_offset(self.line_offset);
+            .line_offset(self.line_offset)
+            .code_pad_right(self.code_pad_right);
 
         Ok(formatter.build()?)
     }
