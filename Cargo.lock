@@ -1016,8 +1016,9 @@ dependencies = [
 
 [[package]]
 name = "pathfinder_simd"
-version = "0.5.2"
-source = "git+https://github.com/servo/pathfinder#cb4eb597c3fef886417e2ff7b89e8348a131b417"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ebf45976c56919841273f2a0fc684c28437e2f304e264557d9c72be5d5a718be"
 dependencies = [
  "rustc_version",
 ]
