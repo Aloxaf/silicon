@@ -15,6 +15,9 @@ pub struct ImageFormatter<T> {
     /// pad of top of the code area
     /// Default: 50
     code_pad_top: u32,
+    /// pad of right of the code area
+    /// Default: 25
+    code_pad_right: u32,
     /// Title bar padding
     /// Default: 15
     title_bar_pad: u32,
@@ -57,6 +60,8 @@ pub struct ImageFormatter<T> {
 pub struct ImageFormatterBuilder<S> {
     /// Pad between lines
     line_pad: u32,
+    /// Padding to the right of the code 
+    code_pad_right: u32,
     /// Show line number
     line_number: bool,
     /// Font of english character, should be mono space font
@@ -106,6 +111,12 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
     /// Set the pad between lines
     pub fn line_pad(mut self, pad: u32) -> Self {
         self.line_pad = pad;
+        self
+    }
+    
+    /// Set the pad on the right of the screen
+    pub fn code_pad_right(mut self, pad: u32) -> Self {
+        self.code_pad_right = pad;
         self
     }
 
@@ -164,6 +175,7 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             line_pad: self.line_pad,
             code_pad: 25,
             code_pad_top: if title_bar { 50 } else { 0 },
+            code_pad_right: self.code_pad_right,
             title_bar_pad: 15,
             window_controls: self.window_controls,
             window_controls_width: 120,
@@ -205,7 +217,7 @@ impl<T: TextLineDrawer> ImageFormatter<T> {
     /// calculate the size of code area
     fn get_image_size(&mut self, max_width: u32, lineno: u32) -> (u32, u32) {
         (
-            (max_width + self.code_pad).max(150),
+            (max_width + self.code_pad_right).max(150),
             self.get_line_y(lineno + 1) + self.code_pad,
         )
     }
