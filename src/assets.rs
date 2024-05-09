@@ -38,10 +38,16 @@ impl HighlightingAssets {
 
     pub fn add_from_folder<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
         let path = path.as_ref();
-        self.theme_set.add_from_folder(path.join("themes"))?;
+        let theme_dir = path.join("themes");
+        if theme_dir.is_dir() {
+            self.theme_set.add_from_folder(theme_dir)?;
+        }
         let mut builder = self.syntax_set.clone().into_builder();
-        builder.add_from_folder(path.join("syntaxes"), true)?;
-        self.syntax_set = builder.build();
+        let syntaxes_dir = path.join("syntaxes");
+        if syntaxes_dir.is_dir() {
+            builder.add_from_folder(syntaxes_dir, true)?;
+            self.syntax_set = builder.build();
+        }
         Ok(())
     }
 
