@@ -159,6 +159,10 @@ pub struct Config {
     #[structopt(long, value_name = "WINDOW_TITLE")]
     pub window_title: Option<String>,
 
+    /// Set window title to filename
+    #[structopt(long)]
+    pub window_title_filename: bool,
+
     /// Hide the line number.
     #[structopt(long)]
     pub no_line_number: bool,
@@ -275,10 +279,18 @@ impl Config {
     }
 
     pub fn get_formatter(&self) -> Result<ImageFormatter<FontCollection>, Error> {
+        let mut window_title = self.window_title.clone();
+
+        if let Some(filename) = self.file.as_ref().and_then(|path| path.file_name().and_then(|filename| filename.to_str())) {
+            if self.window_title_filename {
+                window_title = Some(filename.to_string());
+            }
+        }
+        
         let formatter = ImageFormatterBuilder::new()
             .line_pad(self.line_pad)
             .window_controls(!self.no_window_controls)
-            .window_title(self.window_title.clone())
+            .window_title(window_title)
             .line_number(!self.no_line_number)
             .font(self.font.clone().unwrap_or_default())
             .round_corner(!self.no_round_corner)
