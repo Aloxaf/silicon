@@ -60,7 +60,7 @@ pub struct ImageFormatter<T> {
 pub struct ImageFormatterBuilder<S> {
     /// Pad between lines
     line_pad: u32,
-    /// Padding to the right of the code 
+    /// Padding to the right of the code
     code_pad_right: u32,
     /// Show line number
     line_number: bool,
@@ -113,7 +113,7 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
         self.line_pad = pad;
         self
     }
-    
+
     /// Set the pad on the right of the screen
     pub fn code_pad_right(mut self, pad: u32) -> Self {
         self.code_pad_right = pad;
