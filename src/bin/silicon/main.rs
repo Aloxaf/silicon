@@ -105,7 +105,15 @@ fn run() -> Result<(), Error> {
     let mut args = get_args_from_config_file();
     let mut args_cli = std::env::args_os();
     args.insert(0, args_cli.next().unwrap());
-    args.extend(args_cli);
+
+    args_cli.into_iter().skip(0).for_each(|args_cli| {
+        if args.contains(&args_cli) {
+            let pos = args.iter().position(|x| x == &args_cli).unwrap();
+            args.drain(pos..pos + 2);
+        }
+        args.push(args_cli);
+    });
+
     let config: Config = Config::from_iter(args);
 
     let ha = HighlightingAssets::new();
