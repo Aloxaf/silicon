@@ -76,9 +76,30 @@ fn parse_line_range(s: &str) -> Result<Vec<u32>, ParseIntError> {
     Ok(result)
 }
 
+fn parse_line_col(s: &str) -> Result<Vec<(u32, u32, u32)>, ParseIntError> {
+    let mut result = vec![];
+    for range in s.split(';') {
+        let mut line_col = range.split(',');
+        if line_col.clone().count() != 3 {
+            continue;
+        }
+        let first = line_col.next().unwrap();
+        let second = line_col.next().unwrap();
+        let third = line_col.next().unwrap();
+
+        let first = first.parse::<u32>()?;
+        let second = second.parse::<u32>()?;
+        let third = third.parse::<u32>()?;
+
+        result.push((first, second, third));
+    }
+    Ok(result)
+}
+
 // https://github.com/TeXitoi/structopt/blob/master/CHANGELOG.md#support-optional-vectors-of-arguments-for-distinguishing-between--o-1-2--o-and-no-option-provided-at-all-by-sphynx-180
 type FontList = Vec<(String, f32)>;
 type Lines = Vec<u32>;
+type LineCol = Vec<(u32, u32, u32)>;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "silicon")]
@@ -117,6 +138,11 @@ pub struct Config {
     /// Lines to highlight. eg. '1-3;4'
     #[structopt(long, value_name = "LINES", parse(try_from_str = parse_line_range))]
     pub highlight_lines: Option<Lines>,
+
+    /// Lines and cols to highlight specified as a triple (e.g. 10,2,8 highlights columns 2 to 8 in
+    /// line 10). To suply multiple highlight ranges separate each triple with a semicolon;
+    #[structopt(long, parse(try_from_str = parse_line_col))]
+    pub highlight_cols: Option<LineCol>,
 
     /// The language for syntax highlighting. You can use full name ("Rust") or file extension ("rs").
     #[structopt(short, value_name = "LANG", long)]
@@ -166,6 +192,10 @@ pub struct Config {
     /// Don't round the corner
     #[structopt(long)]
     pub no_round_corner: bool,
+
+    /// Set corner radius
+    #[structopt(long, default_value = "12")]
+    pub corner_radius: u8,
 
     /// Pad horiz
     #[structopt(long, value_name = "PAD", default_value = "80")]
@@ -282,9 +312,11 @@ impl Config {
             .line_number(!self.no_line_number)
             .font(self.font.clone().unwrap_or_default())
             .round_corner(!self.no_round_corner)
+            .corner_radius(self.corner_radius)
             .shadow_adder(self.get_shadow_adder()?)
             .tab_width(self.tab_width)
             .highlight_lines(self.highlight_lines.clone().unwrap_or_default())
+            .highlight_cols(self.highlight_cols.clone().unwrap_or_default())
             .line_offset(self.line_offset)
             .code_pad_right(self.code_pad_right);
 

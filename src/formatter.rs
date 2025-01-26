@@ -37,6 +37,9 @@ pub struct ImageFormatter<T> {
     /// round corner
     /// Default: true
     round_corner: bool,
+    /// corner radius
+    /// Default: 12
+    corner_radius: u8,
     /// pad between code and line number
     /// Default: 6
     line_number_pad: u32,
@@ -48,6 +51,8 @@ pub struct ImageFormatter<T> {
     font: T,
     /// Highlight lines
     highlight_lines: Vec<u32>,
+    /// Highlight col range in line
+    highlight_cols: Vec<(u32, u32, u32)>,
     /// Shadow adder
     shadow_adder: Option<ShadowAdder>,
     /// Tab width
@@ -68,12 +73,16 @@ pub struct ImageFormatterBuilder<S> {
     font: Vec<(S, f32)>,
     /// Highlight lines
     highlight_lines: Vec<u32>,
+    /// Highlight col range in line
+    highlight_cols: Vec<(u32, u32, u32)>,
     /// Whether show the window controls
     window_controls: bool,
     /// Window title
     window_title: Option<String>,
     /// Whether round the corner of the image
     round_corner: bool,
+    /// Sets corner radius
+    corner_radius: u8,
     /// Shadow adder,
     shadow_adder: Option<ShadowAdder>,
     /// Tab width
@@ -144,6 +153,11 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
         self
     }
 
+    pub fn corner_radius(mut self, r: u8) -> Self {
+        self.corner_radius = r;
+        self
+    }
+
     /// Add the shadow
     pub fn shadow_adder(mut self, adder: ShadowAdder) -> Self {
         self.shadow_adder = Some(adder);
@@ -153,6 +167,11 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
     /// Set the lines to highlight.
     pub fn highlight_lines(mut self, lines: Vec<u32>) -> Self {
         self.highlight_lines = lines;
+        self
+    }
+
+    pub fn highlight_cols(mut self, cols: Vec<(u32, u32, u32)>) -> Self {
+        self.highlight_cols = cols;
         self
     }
 
@@ -185,7 +204,9 @@ impl<S: AsRef<str> + Default> ImageFormatterBuilder<S> {
             line_number_pad: 6,
             line_number_chars: 0,
             highlight_lines: self.highlight_lines,
+            highlight_cols: self.highlight_cols,
             round_corner: self.round_corner,
+            corner_radius: self.corner_radius,
             shadow_adder: self.shadow_adder,
             tab_width: self.tab_width,
             font,
@@ -209,9 +230,19 @@ impl<T: TextLineDrawer> ImageFormatter<T> {
         self.font.height(" ") + self.line_pad
     }
 
+    /// width of a single character
+    fn get_col_width(&mut self) -> u32 {
+        self.font.width(" ")
+    }
+
     /// calculate the Y coordinate of a line
     fn get_line_y(&mut self, lineno: u32) -> u32 {
         lineno * self.get_line_height() + self.code_pad + self.code_pad_top
+    }
+
+    /// calculate the X coordinate of a column
+    fn get_col_x(&mut self, col: u32) -> u32 {
+        col * self.get_col_width() + self.code_pad
     }
 
     /// calculate the size of code area
@@ -334,6 +365,38 @@ impl<T: TextLineDrawer> ImageFormatter<T> {
         }
     }
 
+    fn highlight_cols<I: IntoIterator<Item = (u32, u32, u32)>>(
+        &mut self,
+        image: &mut RgbaImage,
+        cols: I,
+        max_lineno_digit_count: u32,
+    ) {
+        let height = self.get_line_height();
+        let mut cloned = image.clone();
+        let color = cloned.get_pixel_mut(20, 20);
+
+        for i in color.0.iter_mut() {
+            *i = (*i).saturating_add(40);
+        }
+
+        for (y, x_start, x_end) in cols {
+            if x_start > x_end {
+                continue;
+            }
+            let x_start = self.get_col_x(x_start - 1);
+            let x_end = self.get_col_x(x_end - 1) + self.get_col_width();
+            let shadow = RgbaImage::from_pixel(x_end - x_start, height, *color);
+            let x = x_start
+                + if self.line_number {
+                    self.get_col_width() * max_lineno_digit_count + 12
+                } else {
+                    0
+                };
+            let y = self.get_line_y(y - 1);
+            copy_alpha(&shadow, image, x, y);
+        }
+    }
+
     // TODO: use &T instead of &mut T ?
     pub fn format(&mut self, v: &[Vec<(Style, &str)>], theme: &Theme) -> RgbaImage {
         if self.line_number {
@@ -362,6 +425,23 @@ impl<T: TextLineDrawer> ImageFormatter<T> {
                 .collect::<Vec<_>>();
             self.highlight_lines(&mut image, highlight_lines);
         }
+
+        if !self.highlight_cols.is_empty() {
+            let mut count = 1;
+            let mut max_lineno = drawables.max_lineno;
+            while max_lineno != 0 {
+                max_lineno /= 10;
+                count += 1;
+            }
+            let highlight_cols = self
+                .highlight_cols
+                .iter()
+                .cloned()
+                .filter(|&(y, _, _)| y >= 1 && y <= drawables.max_lineno + 1)
+                .collect::<Vec<_>>();
+            self.highlight_cols(&mut image, highlight_cols, count);
+        }
+
         if self.line_number {
             self.draw_line_number(&mut image, drawables.max_lineno, foreground.to_rgba());
         }
@@ -381,8 +461,14 @@ impl<T: TextLineDrawer> ImageFormatter<T> {
             add_window_controls(&mut image, &params);
         }
 
-        if self.round_corner {
-            round_corner(&mut image, 12);
+        if self.round_corner && self.corner_radius != 0 {
+            if u32::from(self.corner_radius) > self.code_pad {
+                println!(
+                    "Warning: r = {} > {} (code pad); Parts of the image may start to overlap!",
+                    self.corner_radius, self.code_pad
+                );
+            }
+            round_corner(&mut image, self.corner_radius.into());
         }
 
         if let Some(adder) = &self.shadow_adder {
