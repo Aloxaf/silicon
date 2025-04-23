@@ -402,7 +402,7 @@ impl FontCollection {
 
         for glyph in glyphs {
             glyph.draw(offset, |px, py, v| {
-                if v <= std::f32::EPSILON {
+                if v <= f32::EPSILON {
                     return;
                 }
                 let (x, y) = ((px + x as i32) as u32, (py + y as i32) as u32);

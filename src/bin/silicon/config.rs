@@ -1,5 +1,6 @@
 use anyhow::{Context, Error};
 use clipboard::{ClipboardContext, ClipboardProvider};
+use colorgrad::{CatmullRomGradient, GradientBuilder};
 use image::Rgba;
 use silicon::directories::PROJECT_DIRS;
 use silicon::font::FontCollection;
@@ -42,6 +43,14 @@ pub fn get_args_from_config_file() -> Vec<OsString> {
 fn parse_str_color(s: &str) -> Result<Rgba<u8>, Error> {
     s.to_rgba()
         .map_err(|_| format_err!("Invalid color: `{}`", s))
+}
+
+fn parse_str_gradient(s: &str) -> Result<CatmullRomGradient, Error> {
+    GradientBuilder::new()
+        .css(s)
+        .mode(colorgrad::BlendMode::Oklab)
+        .build::<CatmullRomGradient>()
+        .map_err(|_| format_err!("Invalid CSS gradient: `{}`", s))
 }
 
 fn parse_font_str(s: &str) -> Vec<(String, f32)> {
@@ -97,6 +106,14 @@ pub struct Config {
         parse(try_from_str = parse_str_color)
     )]
     pub background: Rgba<u8>,
+
+    /// Gradient background. eg. 'seagreen, #b4dA55, rgb(0, 125, 200)'
+    #[structopt(long, value_name = "CSS-GRADIENT", conflicts_with = "background", parse(try_from_str = parse_str_gradient))]
+    pub gradient: Option<CatmullRomGradient>,
+
+    /// Gradient angle (in degrees)
+    #[structopt(long, value_name = "ANGLE", default_value = "45")]
+    pub gradient_angle: f32,
 
     /// Show the path of silicon config file
     #[structopt(long)]
@@ -295,7 +312,10 @@ impl Config {
         Ok(ShadowAdder::new()
             .background(match &self.background_image {
                 Some(path) => Background::Image(image::open(path)?.to_rgba8()),
-                None => Background::Solid(self.background),
+                None => match &self.gradient {
+                    Some(gradient) => Background::Gradient(gradient.clone(), self.gradient_angle),
+                    None => Background::Solid(self.background),
+                },
             })
             .shadow_color(self.shadow_color)
             .blur_radius(self.shadow_blur_radius)

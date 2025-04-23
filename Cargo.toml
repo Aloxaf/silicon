@@ -20,6 +20,7 @@ harfbuzz = ["harfbuzz-sys", "font-kit/loader-freetype-default", "font-kit/source
 dirs = "5.0.1"
 imageproc = "0.23.0"
 clipboard = "0.5.0"
+colorgrad = { version = "0.7", default-features = false, features = ["named-colors"] }
 tempfile = "3.10.1"
 conv = "0.3.3"
 pathfinder_geometry = "0.5.1"
