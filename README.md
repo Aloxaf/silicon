@@ -154,6 +154,7 @@ Example:
 
 # Related projects
 
+- [nvim-silicon](https://github.com/michaelrommel/nvim-silicon)
 - [vim-silicon](https://github.com/segeljakt/vim-silicon)
 - [silicon.el](https://github.com/iensu/silicon-el)
 - [silicon.lua](https://github.com/narutoxy/silicon.lua)
