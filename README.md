@@ -155,5 +155,6 @@ Example:
 # Related projects
 
 - [vim-silicon](https://github.com/segeljakt/vim-silicon)
+- [silicon.nvim](https://github.com/krivahtoo/silicon.nvim)
 - [silicon.el](https://github.com/iensu/silicon-el)
 - [silicon.lua](https://github.com/narutoxy/silicon.lua)
