@@ -29,10 +29,7 @@ pub fn gaussian_blur(image: RgbaImage, sigma: f32) -> RgbaImage {
         // SAFETY: [u8; 4] has size 4 and alignment 1, same as 4 contiguous u8.
         // raw.len() == width * height * 4, guaranteed by RgbaImage::into_raw().
         let pixels: &mut [[u8; 4]] = unsafe {
-            std::slice::from_raw_parts_mut(
-                raw.as_mut_ptr().cast::<[u8; 4]>(),
-                raw.len() / 4,
-            )
+            std::slice::from_raw_parts_mut(raw.as_mut_ptr().cast::<[u8; 4]>(), raw.len() / 4)
         };
         gaussian_blur_impl(pixels, width as usize, height as usize, sigma);
     }
