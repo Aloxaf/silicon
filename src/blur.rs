@@ -23,16 +23,15 @@ impl SharedMutPtr {
 pub fn gaussian_blur(image: RgbaImage, sigma: f32) -> RgbaImage {
     let (width, height) = image.dimensions();
     let mut raw = image.into_raw();
-    let len = raw.len();
 
     // fastblur::gaussian_blur only accepts Vec<[u8; 4]>
-    unsafe {
-        raw.set_len(len / 4);
-
-        let ptr = &mut *(&mut raw as *mut Vec<u8> as *mut Vec<[u8; 4]>);
-        gaussian_blur_impl(ptr, width as usize, height as usize, sigma);
-
-        raw.set_len(len);
+    {
+        // SAFETY: [u8; 4] has size 4 and alignment 1, same as 4 contiguous u8.
+        // raw.len() == width * height * 4, guaranteed by RgbaImage::into_raw().
+        let pixels: &mut [[u8; 4]] = unsafe {
+            std::slice::from_raw_parts_mut(raw.as_mut_ptr().cast::<[u8; 4]>(), raw.len() / 4)
+        };
+        gaussian_blur_impl(pixels, width as usize, height as usize, sigma);
     }
 
     RgbaImage::from_raw(width, height, raw).unwrap()
