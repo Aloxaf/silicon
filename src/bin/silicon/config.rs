@@ -278,7 +278,19 @@ impl Config {
         let formatter = ImageFormatterBuilder::new()
             .line_pad(self.line_pad)
             .window_controls(!self.no_window_controls)
-            .window_title(self.window_title.clone())
+            // .window_title(self.window_title.clone())
+            .window_title(
+                self.window_title.as_deref().map(|title| {
+                    if title.contains("$FILENAME") {
+                        let file_name = self.file
+                            .as_deref()
+                            .and_then(|p| std::path::Path::new(p).file_name())
+                            .map(|f| f.to_string_lossy())
+                            .unwrap();
+                        title.replace("$FILENAME", &file_name)
+                    } else { title.to_string() }
+                })
+            )
             .line_number(!self.no_line_number)
             .font(self.font.clone().unwrap_or_default())
             .round_corner(!self.no_round_corner)
