@@ -147,7 +147,7 @@ pub struct Config {
         short,
         long,
         value_name = "PATH",
-        required_unless_one = &["config-file", "list-fonts", "list-themes", "to-clipboard", "build-cache"]
+        // required_unless_one = &["config-file", "list-fonts", "list-themes", "to-clipboard", "build-cache"]
     )]
     pub output: Option<PathBuf>,
 
@@ -278,7 +278,19 @@ impl Config {
         let formatter = ImageFormatterBuilder::new()
             .line_pad(self.line_pad)
             .window_controls(!self.no_window_controls)
-            .window_title(self.window_title.clone())
+            // .window_title(self.window_title.clone())
+            .window_title(
+                self.window_title.as_deref().map(|title| {
+                    if title.contains("$FILENAME") {
+                        let file_name = self.file
+                            .as_deref()
+                            .and_then(|p| std::path::Path::new(p).file_name())
+                            .map(|f| f.to_string_lossy())
+                            .unwrap();
+                        title.replace("$FILENAME", &file_name)
+                    } else { title.to_string() }
+                })
+            )
             .line_number(!self.no_line_number)
             .font(self.font.clone().unwrap_or_default())
             .round_corner(!self.no_round_corner)
@@ -305,15 +317,36 @@ impl Config {
             .offset_y(self.shadow_offset_y))
     }
 
-    pub fn get_expanded_output(&self) -> Option<PathBuf> {
-        let need_expand = self.output.as_ref().map(|p| p.starts_with("~")) == Some(true);
+    // pub fn get_expanded_output(&self) -> Option<PathBuf> {
+        // let need_expand = self.output.as_ref().map(|p| p.starts_with("~")) == Some(true);
 
-        if let (Ok(home_dir), true) = (std::env::var("HOME"), need_expand) {
-            self.output
-                .as_ref()
-                .map(|p| p.to_string_lossy().replacen('~', &home_dir, 1).into())
-        } else {
-            self.output.clone()
+        // if let (Ok(home_dir), true) = (std::env::var("HOME"), need_expand) {
+            // self.output
+               // .as_ref()
+               // .map(|p| p.to_string_lossy()
+               // .replacen('~', &home_dir, 1).into())
+       // } else {
+           // self.output.clone()
+       // }
+   // }
+
+    pub fn get_expanded_output(&self) -> Option<PathBuf> {
+        if self.output.is_some() {
+            let need_expand = self.output.as_ref().map(|p| p.starts_with("~")) == Some(true);
+
+            if let (Ok(home_dir), true) = (std::env::var("HOME"), need_expand) {
+                return self.output
+                    .as_ref()
+                    .map(|p| p.to_string_lossy().replacen('~', &home_dir, 1).into());
+            } else {
+                return self.output.clone();
+            }
         }
+
+        self.file.as_ref().map(|f| {
+            let mut fallback = f.clone();
+            fallback.set_extension("png");
+            fallback
+        })
     }
 }
